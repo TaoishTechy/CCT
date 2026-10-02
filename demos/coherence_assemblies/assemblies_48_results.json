@@ -1,0 +1,443 @@
+{
+  "n": 48,
+  "passed": 48,
+  "assemblies": {
+    "direct_sum": "inaccessible branches; block-diagonal mixture",
+    "tensor_product": "coexisting factors; blanket cut",
+    "cartesian_product": "seven heterogeneous coordinates"
+  },
+  "checks": [
+    {
+      "index": 1,
+      "family": "Superselection sectors",
+      "assembly": "direct sum",
+      "claim": "Sector-local observables have vanishing cross-blocks.",
+      "statistic": 0.0,
+      "passed": true,
+      "note": "Wick\u2013Wightman\u2013Wigner superselection: inaccessible sectors force \u2295, not a coherent sum."
+    },
+    {
+      "index": 2,
+      "family": "Representation dimension",
+      "assembly": "direct sum",
+      "claim": "Three 2D sectors add to dimension 6, they do not multiply to 8.",
+      "statistic": 6.0,
+      "passed": true,
+      "note": "Alternatives add dimensions. Subsystems would multiply them."
+    },
+    {
+      "index": 3,
+      "family": "Classical mixture",
+      "assembly": "direct sum",
+      "claim": "Branch weights form a probability vector.",
+      "statistic": 1.0,
+      "passed": true,
+      "note": "Admissible state is \u2295 p_a rho_a, not a coherent superposition."
+    },
+    {
+      "index": 4,
+      "family": "Partial trace over sectors",
+      "assembly": "direct sum",
+      "claim": "Each block trace equals its sector weight.",
+      "statistic": 5.551115123125783e-17,
+      "passed": true,
+      "note": "Block trace is the sector probability."
+    },
+    {
+      "index": 5,
+      "family": "Interference visibility",
+      "assembly": "direct sum",
+      "claim": "Which-sector inaccessibility sets interference visibility to zero.",
+      "statistic": 0.0,
+      "passed": true,
+      "note": "A coherent sum would be a different physical claim."
+    },
+    {
+      "index": 6,
+      "family": "Pointer-basis selection",
+      "assembly": "direct sum",
+      "claim": "Environment-induced selection leaves a diagonal ensemble in the pointer basis.",
+      "statistic": 0.12666666666666668,
+      "passed": true,
+      "note": "Quantum Darwinism supplies the selection story; the ensemble is still a mixture."
+    },
+    {
+      "index": 7,
+      "family": "Mutually exclusive events",
+      "assembly": "direct sum",
+      "claim": "Exclusive branches cannot be a joint sample of coexisting factors.",
+      "statistic": 1.0,
+      "passed": true,
+      "note": "Probability of a union adds. Probability of a joint factors only for coexisting variables."
+    },
+    {
+      "index": 8,
+      "family": "Observable algebra",
+      "assembly": "direct sum",
+      "claim": "Block-diagonal algebra is smaller than the full matrix algebra.",
+      "statistic": 0.3333333333333333,
+      "passed": true,
+      "note": "dim \u2295 M_2 = 12; dim M_6 = 36. Cross-observables are the missing 24."
+    },
+    {
+      "index": 9,
+      "family": "Sector-preserving channels",
+      "assembly": "direct sum",
+      "claim": "A Kraus map that is block diagonal cannot create cross-sector coherence.",
+      "statistic": 0.0,
+      "passed": true,
+      "note": "Stinespring dilation of a sector-local channel stays in the direct sum."
+    },
+    {
+      "index": 10,
+      "family": "Multinomial sector weights",
+      "assembly": "direct sum",
+      "claim": "Sector probabilities are ordinary multinomial frequencies.",
+      "statistic": 0.02318404623873924,
+      "passed": true,
+      "note": "Estimation does not require a tensor Hilbert space."
+    },
+    {
+      "index": 11,
+      "family": "Shannon entropy of sectors",
+      "assembly": "direct sum",
+      "claim": "Unresolved sector entropy is the Shannon entropy of p.",
+      "statistic": 1.4854752972273344,
+      "passed": true,
+      "note": "Suffering is not identified with this entropy; the statistic only measures unresolved selection."
+    },
+    {
+      "index": 12,
+      "family": "Selection deficit",
+      "assembly": "direct sum",
+      "claim": "Failure of branch selection is total variation from a one-hot weight.",
+      "statistic": 0.5,
+      "passed": true,
+      "note": "Psychotic-analogue regime in this formal model is tv > 0, not a tensor entanglement."
+    },
+    {
+      "index": 13,
+      "family": "Hilbert\u2013Schmidt overlap",
+      "assembly": "direct sum",
+      "claim": "Embedded sectors are orthogonal as subspaces even if blocks are full rank inside.",
+      "statistic": 0.0,
+      "passed": true,
+      "note": "Orthogonality is in the direct-sum embedding, not inside a block."
+    },
+    {
+      "index": 14,
+      "family": "Spectral radius of a block generator",
+      "assembly": "direct sum",
+      "claim": "Spectral radius of a direct sum is the max of the block radii.",
+      "statistic": 0.6,
+      "passed": true,
+      "note": "A single \u03c1 > 1 claim must name the time base. Here the discrete radius is the max block radius."
+    },
+    {
+      "index": 15,
+      "family": "Discrete stability",
+      "assembly": "direct sum",
+      "claim": "Every block radius below 1 implies the direct-sum map is asymptotically stable.",
+      "statistic": 0.6,
+      "passed": true,
+      "note": "This does not license a universal clinical threshold at 0.95."
+    },
+    {
+      "index": 16,
+      "family": "Conditional mutual information",
+      "assembly": "tensor product",
+      "claim": "A perfect blanket drives I(internal; external | blanket) below the raw mutual information.",
+      "statistic": 0.00011024669602899273,
+      "passed": true,
+      "note": "Markov blanket: internal \u22a5 external | blanket. Active-inference measurement model."
+    },
+    {
+      "index": 17,
+      "family": "Unconditional dependence",
+      "assembly": "tensor product",
+      "claim": "Without the blanket conditioner, internal and external still share information.",
+      "statistic": 0.7295290067942362,
+      "passed": true,
+      "note": "High raw mutual information is coupling, not insulation. This is the sign error in CI_B = I/H."
+    },
+    {
+      "index": 18,
+      "family": "Partial information decomposition",
+      "assembly": "tensor product",
+      "claim": "Coexisting inputs require a joint, hence a tensor of variable spaces, before atoms are defined.",
+      "statistic": 1.0,
+      "passed": true,
+      "note": "Williams\u2013Beer atoms are defined on a joint distribution, not on a direct sum of alternatives."
+    },
+    {
+      "index": 19,
+      "family": "Transfer entropy proxy",
+      "assembly": "tensor product",
+      "claim": "Directed dependence is a property of a joint process.",
+      "statistic": 0.9920288106540583,
+      "passed": true,
+      "note": "Schreiber transfer entropy lives on a product of time-indexed variables."
+    },
+    {
+      "index": 20,
+      "family": "Conditional independence discovery",
+      "assembly": "tensor product",
+      "claim": "Partial correlation can fall once the common driver is conditioned on.",
+      "statistic": -0.05237628349833299,
+      "passed": true,
+      "note": "PCMCI-style conditioning is the empirical blanket test."
+    },
+    {
+      "index": 21,
+      "family": "Partition comparison",
+      "assembly": "tensor product",
+      "claim": "A cut score is only defined after factors coexist in a joint.",
+      "statistic": 0.5000113808147775,
+      "passed": true,
+      "note": "Used only as a partition score. Not a clinical index and not \u03a6 as a psychosis measure."
+    },
+    {
+      "index": 22,
+      "family": "Product-state Kronecker construction",
+      "assembly": "tensor product",
+      "claim": "A product state has Schmidt rank 1 across the cut.",
+      "statistic": 4.0,
+      "passed": true,
+      "note": "np.kron is the tensor product of coexisting factors."
+    },
+    {
+      "index": 23,
+      "family": "Negative partial transpose",
+      "assembly": "tensor product",
+      "claim": "Blanket failure as entanglement is a tensor-product predicate.",
+      "statistic": 0.49999999999999956,
+      "passed": true,
+      "note": "Direct-sum sectors cannot be entangled with each other; they are alternatives."
+    },
+    {
+      "index": 24,
+      "family": "Schmidt decomposition",
+      "assembly": "tensor product",
+      "claim": "Two nonzero Schmidt coefficients mark a non-product joint.",
+      "statistic": 2.0,
+      "passed": true,
+      "note": "This predicate is unavailable in a direct-sum sector model."
+    },
+    {
+      "index": 25,
+      "family": "Boundary-bulk cut",
+      "assembly": "tensor product",
+      "claim": "A screen is a cut of a joint system, so the ambient space is a tensor product.",
+      "statistic": 1.0,
+      "passed": true,
+      "note": "Even a bulk-boundary split is \u2297. It does not by itself force a psychosis sector sum."
+    },
+    {
+      "index": 26,
+      "family": "Local noise channel",
+      "assembly": "tensor product",
+      "claim": "A channel on one factor is I \u2297 E, which is defined only in a tensor product.",
+      "statistic": 0.85,
+      "passed": true,
+      "note": "Sector noise would instead be \u2295 E_a."
+    },
+    {
+      "index": 27,
+      "family": "Manifold dimension",
+      "assembly": "Cartesian product",
+      "claim": "Seven coordinate axes span a 7D tangent space.",
+      "statistic": 7.0,
+      "passed": true,
+      "note": "Configuration space is a product of intervals."
+    },
+    {
+      "index": 28,
+      "family": "Dimension collapse under tensor",
+      "assembly": "Cartesian product",
+      "claim": "Tensoring seven lines yields a 1D space.",
+      "statistic": 1.0,
+      "passed": true,
+      "note": "This is why the seven-tuple must not be written with \u2297."
+    },
+    {
+      "index": 29,
+      "family": "Whitney sum",
+      "assembly": "Cartesian product",
+      "claim": "The tangent space of a product is the direct sum of the factor tangents.",
+      "statistic": 7.0,
+      "passed": true,
+      "note": "This \u2295 is forced by the product manifold, not by branch inaccessibility."
+    },
+    {
+      "index": 30,
+      "family": "Dimensional homogeneity",
+      "assembly": "Cartesian product",
+      "claim": "Seven differently unitized coordinates are a tuple, not a vector in one Hilbert space.",
+      "statistic": 7.0,
+      "passed": true,
+      "note": "A master functional that multiplies them is dimensionally inhomogeneous."
+    },
+    {
+      "index": 31,
+      "family": "Identifiable projection",
+      "assembly": "Cartesian product",
+      "claim": "The pocket state (P, B, T) is a coordinate projection, not a partial trace.",
+      "statistic": 0.8306623862918074,
+      "passed": true,
+      "note": "Partial trace is the tensor operation. Projection is the Cartesian operation."
+    },
+    {
+      "index": 32,
+      "family": "Mahalanobis deviation",
+      "assembly": "Cartesian product",
+      "claim": "Severity on a product space needs an explicit metric; Euclidean distance is a choice.",
+      "statistic": 19.98624527018519,
+      "passed": true,
+      "note": "Replaces an unnormalized seven-dimensional polytope radius."
+    },
+    {
+      "index": 33,
+      "family": "Proper scoring of a scalar index",
+      "assembly": "Cartesian product",
+      "claim": "A collapse probability must be a calibrated map, not an algebraic combination of raw coordinates.",
+      "statistic": 0.8578975963374148,
+      "passed": true,
+      "note": "PSI as written is not a probability when sigma exceeds its critical value."
+    },
+    {
+      "index": 34,
+      "family": "Critical slowing down",
+      "assembly": "Cartesian product",
+      "claim": "Lag-1 autocorrelation of one coordinate can rise without a sector sum.",
+      "statistic": 0.9192424678350704,
+      "passed": true,
+      "note": "Early-warning literature on prodromal symptom series. tau must be defined by the sampling rate."
+    },
+    {
+      "index": 35,
+      "family": "Kurtosis under a Gaussian null",
+      "assembly": "Cartesian product",
+      "claim": "Sample excess-related kurtosis of a Gaussian sits near 3, not at a universal cut of 8.",
+      "statistic": 2.9860051443771147,
+      "passed": true,
+      "note": "Heavy tails need a model comparison, not a fixed kurtosis threshold."
+    },
+    {
+      "index": 36,
+      "family": "Model comparison for noise",
+      "assembly": "Cartesian product",
+      "claim": "A heavier-tailed model can outscore a Gaussian on the same coordinate.",
+      "statistic": 0.40167409483538163,
+      "passed": true,
+      "note": "WAIC or ELPD should choose the noise family. A 4.8 percent cut is not derived."
+    },
+    {
+      "index": 37,
+      "family": "Hysteresis gap",
+      "assembly": "Cartesian product",
+      "claim": "A recovery threshold below the collapse threshold is a separate parameter.",
+      "statistic": 0.011000000000000003,
+      "passed": true,
+      "note": "The gap must be estimated from trajectories. The values here are illustrative only."
+    },
+    {
+      "index": 38,
+      "family": "Change-point detection",
+      "assembly": "Cartesian product",
+      "claim": "A coordinate can jump without any of the other six moving.",
+      "statistic": 1.401021683613871,
+      "passed": true,
+      "note": "Supports a product space: coordinates are not factors of one entangled vector."
+    },
+    {
+      "index": 39,
+      "family": "Simulation-based calibration",
+      "assembly": "Cartesian product",
+      "claim": "A recoverable coordinate has a posterior rank near one half under the prior predictive.",
+      "statistic": 0.605,
+      "passed": true,
+      "note": "Parameters should be recoverable in simulation before any subject is scored."
+    },
+    {
+      "index": 40,
+      "family": "Network control energy",
+      "assembly": "Cartesian product",
+      "claim": "Control cost is computed on an identified dynamical matrix, not on a symbolic rho.",
+      "statistic": 1.46,
+      "passed": true,
+      "note": "Gu et al. network control is a method family. It does not set a clinical cascade order by itself."
+    },
+    {
+      "index": 41,
+      "family": "Precision weighting",
+      "assembly": "Cartesian product",
+      "claim": "Precision is an inverse variance on one error channel.",
+      "statistic": 4.0,
+      "passed": true,
+      "note": "Aberrant salience can be a high precision on noise. It is not a log-ratio capped at +2."
+    },
+    {
+      "index": 42,
+      "family": "Corollary discharge",
+      "assembly": "Cartesian product",
+      "claim": "A sensory residual is a difference on one channel, not a new sector.",
+      "statistic": 0.18000000000000005,
+      "passed": true,
+      "note": "Inner-speech and corollary-discharge models remain competing explanations of voices."
+    },
+    {
+      "index": 43,
+      "family": "Hierarchical volatility",
+      "assembly": "Cartesian product",
+      "claim": "Learning-rate coordinates can be stacked without tensoring the axes.",
+      "statistic": 1.1,
+      "passed": true,
+      "note": "Mathys-style hierarchical Gaussian filtering. Stacking is a product, not a tensor of lines."
+    },
+    {
+      "index": 44,
+      "family": "Item-response layer",
+      "assembly": "Cartesian product",
+      "claim": "Clinical items stay on an ordinal layer above the coordinates.",
+      "statistic": 2.4,
+      "passed": true,
+      "note": "Coordinates do not replace validated scales."
+    },
+    {
+      "index": 45,
+      "family": "State versus disorder",
+      "assembly": "Cartesian product",
+      "claim": "Equal state deviation need not imply equal disorder once distress is a multiplier.",
+      "statistic": 1.12,
+      "passed": true,
+      "note": "Matches the pocket rule: disorder is deviation times distress, impairment, and duration."
+    },
+    {
+      "index": 46,
+      "family": "External scaffold coordinate",
+      "assembly": "Cartesian product",
+      "claim": "A social covariate can be another axis. It is not a second reality sector unless inaccessibility is claimed.",
+      "statistic": 0.29999999999999993,
+      "passed": true,
+      "note": "Contagion models should be fit on networks before any CI_B network claim."
+    },
+    {
+      "index": 47,
+      "family": "Uncertainty calibration",
+      "assembly": "Cartesian product",
+      "claim": "An agent monitor can be expected calibration error on its own axis.",
+      "statistic": 0.33749999999999997,
+      "passed": true,
+      "note": "Reward hacking is not identified with spectral radius above 1."
+    },
+    {
+      "index": 48,
+      "family": "Assembly consistency",
+      "assembly": "all three",
+      "claim": "Branches use \u2295, blanket factors use \u2297, coordinates use a Cartesian product.",
+      "statistic": 3.0,
+      "passed": true,
+      "note": "The master-equation product of branch vectors remains undefined and is not generated."
+    }
+  ]
+}
