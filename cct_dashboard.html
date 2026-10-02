@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CCT · Coherence Collapse Dashboard v1.0</title>
+<style>
+  :root{
+    --bg:#05070d; --panel:#0a0f19; --panel2:#0d1422; --line:#16233a;
+    --txt:#c9d8ee; --dim:#6b8199; --acc:#39ff9e; --warn:#ffcc44;
+    --bad:#ff4d6d; --cool:#4db8ff; --purple:#a77bff;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg); color:var(--txt);
+    font:12px/1.45 var(--mono);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  header{
+    flex:0 0 auto; display:flex; align-items:center; gap:14px;
+    padding:8px 14px; background:linear-gradient(90deg,#080d16,#0b1220);
+    border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  header h1{
+    font-size:13px; margin:0; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--acc); font-weight:600; white-space:nowrap;
+  }
+  header .sub{color:var(--dim); font-size:10px; letter-spacing:.06em}
+  .spacer{flex:1}
+  button, select{
+    background:var(--panel2); color:var(--txt); border:1px solid var(--line);
+    padding:5px 10px; border-radius:4px; font:11px var(--mono); cursor:pointer;
+    transition:.15s;
+  }
+  button:hover{border-color:var(--acc); color:var(--acc)}
+  button.on{background:#0f2a20; border-color:var(--acc); color:var(--acc)}
+  select{padding:5px 6px}
+  main{flex:1; display:flex; min-height:0}
+  aside{
+    background:var(--panel); border-right:1px solid var(--line);
+    overflow-y:auto; flex:0 0 296px;
+  }
+  aside#right{border-right:none; border-left:1px solid var(--line); flex:0 0 320px}
+  aside::-webkit-scrollbar{width:7px}
+  aside::-webkit-scrollbar-thumb{background:#1c2c44; border-radius:4px}
+  .grp{border-bottom:1px solid var(--line)}
+  .grp>h3{
+    margin:0; padding:7px 10px; font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--cool); background:#0c1322;
+    cursor:pointer; display:flex; justify-content:space-between;
+  }
+  .grp>h3 span{color:var(--dim)}
+  .feat{
+    display:flex; gap:7px; align-items:flex-start; padding:5px 10px;
+    border-bottom:1px solid #0c1220; cursor:pointer; transition:.12s;
+  }
+  .feat:hover{background:#0e1727}
+  .feat input{margin:2px 0 0; accent-color:var(--acc); flex:0 0 auto}
+  .feat .txt{min-width:0}
+  .feat .nm{font-size:10.5px; color:#b9cbe4; display:block}
+  .feat .id{color:var(--purple); font-size:9px; margin-right:4px}
+  .feat .ds{font-size:9px; color:var(--dim); display:none; margin-top:2px}
+  .feat.open .ds{display:block}
+  .feat.on .nm{color:var(--acc)}
+  #stage{flex:1; position:relative; min-width:0; background:#04060b}
+  #gl{display:block; width:100%; height:100%}
+  #hud{
+    position:absolute; inset:auto auto 10px 12px; pointer-events:none;
+    font-size:10px; color:var(--dim); background:rgba(5,8,14,.72);
+    border:1px solid var(--line); border-radius:5px; padding:8px 11px;
+    line-height:1.7; backdrop-filter:blur(4px);
+  }
+  #hud b{color:var(--acc); font-weight:500}
+  #hud .k{color:var(--warn)}
+  #badge{
+    position:absolute; top:10px; left:12px; font-size:10px;
+    border:1px solid var(--line); border-radius:5px; padding:6px 10px;
+    background:rgba(5,8,14,.72); backdrop-filter:blur(4px); line-height:1.6;
+  }
+  #alert{
+    position:absolute; top:10px; right:12px; font-size:11px; letter-spacing:.1em;
+    border:1px solid var(--bad); color:var(--bad); border-radius:5px;
+    padding:6px 12px; background:rgba(40,5,14,.8); display:none;
+    animation:pulse 1.1s infinite; text-transform:uppercase;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .card{border-bottom:1px solid var(--line); padding:9px 11px}
+  .card h4{
+    margin:0 0 7px; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--cool); font-weight:600; display:flex; justify-content:space-between;
+  }
+  .card h4 em{font-style:normal; color:var(--dim); font-size:9px}
+  .row{display:flex; justify-content:space-between; gap:8px; padding:1.5px 0; font-size:10.5px}
+  .row span:last-child{color:#e6f0ff}
+  .bar{height:5px; background:#101a2b; border-radius:3px; overflow:hidden; margin:3px 0 6px}
+  .bar i{display:block; height:100%; border-radius:3px; transition:width .18s, background .18s}
+  canvas.mini{width:100%; height:86px; display:block; border-radius:4px; background:#070b13;
+    border:1px solid var(--line)}
+  .psi{font-size:28px; font-weight:600; letter-spacing:-.02em; line-height:1}
+  .psi small{font-size:10px; color:var(--dim); letter-spacing:.1em}
+  .btns{display:flex; gap:6px; flex-wrap:wrap}
+  .btns button{flex:1; min-width:88px}
+  .tag{
+    display:inline-block; font-size:9px; padding:1px 5px; border-radius:3px;
+    border:1px solid var(--line); color:var(--dim); margin-right:3px;
+  }
+  .tag.t1{color:var(--acc); border-color:#1c4a36}
+  .tag.t2{color:var(--warn); border-color:#4a3d16}
+  .tag.t3{color:var(--purple); border-color:#3a2a5a}
+  .slider{display:flex; align-items:center; gap:7px; font-size:10px; color:var(--dim)}
+  .slider input[type=range]{width:96px; accent-color:var(--acc)}
+  .foot{padding:9px 11px; color:var(--dim); font-size:9px; line-height:1.6}
+  #boot{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:#04060b; color:var(--dim); font-size:11px; letter-spacing:.2em;
+    z-index:9; transition:opacity .5s;
+  }
+  @media(max-width:1100px){
+    aside{flex-basis:230px} aside#right{flex-basis:250px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CCT · Coherence Collapse Dashboard</h1>
+  <span class="sub">v1.0 · 7-D PSV · 48 features · conceptual only</span>
+  <div class="spacer"></div>
+
+  <select id="scenario" title="Scenario preset">
+    <option value="healthy">Healthy baseline</option>
+    <option value="prodromal">Prodromal</option>
+    <option value="paranoid">Paranoid schizophrenia</option>
+    <option value="mania">Mania w/ psychotic features</option>
+    <option value="psychedelic">Psychedelic-induced</option>
+    <option value="recovery">CRC recovery trajectory</option>
+    <option value="social">Collective / social contagion</option>
+    <option value="ai">AI mesa-optimization</option>
+  </select>
+
+  <div class="slider">LOAD <input id="load" type="range" min="0" max="100" value="5"/><b id="loadv">0.05</b></div>
+  <div class="slider">Rx <input id="rx" type="range" min="0" max="100" value="0"/><b id="rxv">0.00</b></div>
+
+  <button id="play" class="on">▶ RUN</button>
+  <button id="reset">⟲ RESET</button>
+  <button id="allf">ALL 48</button>
+  <button id="nof">NONE</button>
+</header>
+
+<main>
+  <aside id="left"></aside>
+
+  <section id="stage">
+    <canvas id="gl"></canvas>
+    <div id="boot">INITIALISING COHERENCE SUBSTRATE…</div>
+    <div id="badge">
+      <div><span style="color:var(--acc)">■</span> healthy attractor &nbsp; <span style="color:var(--bad)">■</span> psychotic attractor</div>
+      <div><span style="color:var(--cool)">■</span> coherence polytope &nbsp; <span style="color:var(--warn)">■</span> separatrix</div>
+      <div style="color:var(--dim)">drag = orbit · wheel = zoom · right-drag = pan</div>
+    </div>
+    <div id="alert">⚠ coherence collapse imminent</div>
+    <div id="hud"></div>
+  </section>
+
+  <aside id="right">
+    <div class="card">
+      <h4>Psychotic State Index <em>PSI</em></h4>
+      <div class="psi" id="psiV">1.00</div>
+      <div class="bar"><i id="psiBar" style="width:100%;background:var(--acc)"></i></div>
+      <div class="row"><span>regime</span><span id="psiReg">STABLE</span></div>
+      <div class="row"><span>system health H_sys</span><span id="hsys">1.000</span></div>
+    </div>
+
+    <div class="card">
+      <h4>PSV — 7 dimensions <em>live</em></h4>
+      <div id="psv"></div>
+    </div>
+
+    <div class="card">
+      <h4>Analysis <em id="anName">—</em></h4>
+      <canvas class="mini" id="mini"></canvas>
+    </div>
+
+    <div class="card">
+      <h4>Spectral &amp; stability</h4>
+      <div class="row"><span>ρ(W) modelled</span><span id="rhoV">0.85</span></div>
+      <div class="bar"><i id="rhoBar" style="width:85%;background:var(--acc)"></i></div>
+      <div class="row"><span>‖I+Δt·J‖₂ computed</span><span id="smaxV">—</span></div>
+      <div class="row"><span>Lyapunov λ_L</span><span id="lyapV">—</span></div>
+      <div class="row"><span>σ noise tolerance</span><span id="sigV">0.021</span></div>
+      <div class="row"><span>kurtosis (rolling)</span><span id="kurtV">3.00</span></div>
+      <div class="row"><span>bifurcation</span><span id="bifV">stable node</span></div>
+      <div class="row"><span>Kramers escape rate</span><span id="kramV">—</span></div>
+      <div class="row"><span>1st-exit relapse risk</span><span id="rrV">—</span></div>
+    </div>
+
+    <div class="card">
+      <h4>Coherence ledger</h4>
+      <div class="row"><span>CI_B boundary</span><span id="cibV">0.95</span></div>
+      <div class="row"><span>CI_C continuum</span><span id="cicV">0.80</span></div>
+      <div class="row"><span>∂ₜ(CI_B+CI_C)=σ_topo</span><span id="stopV">0.00</span></div>
+      <div class="row"><span>branch desync</span><span id="brV">1.00</span></div>
+      <div class="row"><span>voice fragments</span><span id="voxV">1</span></div>
+      <div class="row"><span>regularisation λ</span><span id="lamV">0.045</span></div>
+    </div>
+
+    <div class="card">
+      <h4>Frontier analytics</h4>
+      <div class="row"><span>Φ* integrated info</span><span id="phiV">—</span></div>
+      <div class="row"><span>synergy I(P;B;T)</span><span id="synV">—</span></div>
+      <div class="row"><span>Rényi H_π^(α)</span><span id="renV">—</span></div>
+      <div class="row"><span>causal density CD</span><span id="cdV">—</span></div>
+      <div class="row"><span>d_eff effective dim</span><span id="deffV">—</span></div>
+      <div class="row"><span>entropy production</span><span id="epV">—</span></div>
+      <div class="row"><span>transfer entropy</span><span id="teV">—</span></div>
+      <div class="row"><span>recovery basin RC</span><span id="rcV">—</span></div>
+    </div>
+
+    <div class="card">
+      <h4>CRC cascade <em>7 stages</em></h4>
+      <div id="crc"></div>
+    </div>
+
+    <div class="card">
+      <h4>Claim register <em>CDP-3.0</em></h4>
+      <div id="claims"></div>
+    </div>
+
+    <div class="card">
+      <h4>Export</h4>
+      <div class="btns">
+        <button id="expJson">⬇ metrics.json</button>
+        <button id="expMd">⬇ report.md</button>
+        <button id="expCsv">⬇ series.csv</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      Conceptual / educational dynamical-systems model. No equation here is a
+      diagnostic, prognostic or therapeutic algorithm. Not clinical advice.
+    </div>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* =====================================================================
+   CCT COHERENCE COLLAPSE DASHBOARD
+   ===================================================================== */
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const clamp01=x=>clamp(x,0,1);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const sig=x=>1/(1+Math.exp(-x));
+const TAU=Math.PI*2;
+
+/* ---------------------------------------------------------------------
+   THE 48 FEATURES
+   g: group index, vis: VIS keys, f: formula/description string
+--------------------------------------------------------------------- */
+const GROUPS=[
+  'Manifold Geometry','Coherence & Information','Spectral & Stability',
+  'Precision & Salience','Clinical / CRC','Frontier Analytics'
+];
+
+const FEATURES=[
+/* ---- 0. MANIFOLD GEOMETRY ---- */
+{id:1,g:0,n:'Itô–Stratonovich Integrator',vis:['trail'],
+ f:'dΨ = ∇F·dD + ½Hess(F):d⟨D,D⟩ + dW',
+ d:'State trajectory integrated with a Heun predictor–corrector so that multiplicative noise is interpreted in the Stratonovich sense. Renders the world-line of the 3-D projection (P,B,T).'},
+{id:2,g:0,n:'State-Manifold Curvature Field',vis:['potential'],
+ f:'V(P,B,T)=Σaᵢφᵢ + Σbᵢⱼφᵢφⱼ + Σcᵢⱼₖφᵢφⱼφₖ',
+ d:'Nonlinear potential sampled on a 14³ lattice, coloured by energy. The effective potential absorbs the second moment of the noise: V_eff = V + λ·Tr(Hess V·Σ).'},
+{id:3,g:0,n:'Geodesic Path Agnation',vis:['geodesic'],
+ f:'d_g = inf_γ ∫₀¹ √(g_μν γ̇^μ γ̇^ν) ds',
+ d:'Riemannian distance between the healthy and psychotic attractors, drawn as a dashed arc. Shortens as the metric degenerates with boundary loss.'},
+{id:4,g:0,n:'Torsion Tensor Overlay',vis:['torsion'],
+ f:'τ = Tr(T^ρ_μν) ≈ (D×Ḋ)·D̈ / ‖D×Ḋ‖²',
+ d:'Twisting of the state flow around its own velocity. High torsion = the trajectory spirals rather than descends the potential — the geometric signature of identity orbiting.'},
+{id:5,g:0,n:'Covariant Lyapunov Vectors',vis:['lyap'],
+ f:'L(t) = (1/t)·log(‖δD(t)‖/‖δD(0)‖)',
+ d:'Tangent-space perturbation vectors grown from the Jacobian columns. Positive exponents in the collapsing regime are the formal statement of chaos.'},
+{id:6,g:0,n:'Boltzmann-Weighted Basin Volume',vis:['basin'],
+ f:'V_basin = ∫_B e^{−βV} dD',
+ d:'Volume of the healthy attractor basin under a Boltzmann measure. Rendered as a translucent ellipsoid whose radius tracks the shrinking basin as load rises.'},
+{id:7,g:0,n:'Separatrix Surface',vis:['separatrix'],
+ f:'S = {D : ∇V·n̂ = 0}',
+ d:'The boundary hypersurface dividing the healthy basin from the psychotic basin. Crossed exactly once during a full cascade.'},
+{id:8,g:0,n:'Volume-Form Corrected Divergence',vis:['divergence'],
+ f:'∇·Ḋ + ½ ∂ₜ log det g',
+ d:'Divergence of the drift with a metric-correction term. Negative divergence = contraction toward an attractor; positive = expansion into chaos.'},
+
+/* ---- 1. COHERENCE & INFORMATION ---- */
+{id:9,g:1,n:'Boundary Coherence Blanket',vis:['blanket'],
+ f:'CI_B = 1 − H(internal|external)/H(internal)',
+ d:'The Markov blanket rendered as a translucent membrane around the current state. Opacity tracks CI_B; the membrane dissolves as boundary integrity falls.'},
+{id:10,g:1,n:'Continuum Coherence Flow',vis:['flow'],
+ f:'CI_C = I(X;Y)/H(X)',
+ d:'Advected particle field following the drift — the "correlation continuum" made visible. Particle speed scales with continuum coherence.'},
+{id:11,g:1,n:'Coherence Conservation Ledger',vis:['ledger'],
+ f:'∂ₜ(CI_B + CI_C) = σ_topo',
+ d:'Computes the residual σ_topo of the conservation law. Near zero in health; large and positive during a genuine phase transition. Plotted on the analysis canvas.'},
+{id:12,g:1,n:'Transfer-Entropy Graph',vis:['tegraph'],
+ f:'T_{X→Y} = Σ p(y_{t+1},y_t,x_t) log[ p(y_{t+1}|y_t,x_t)/p(y_{t+1}|y_t) ]',
+ d:'Directed information-flow edges between the three axes. In psychosis the graph densifies and becomes less asymmetric — everything drives everything.'},
+{id:13,g:1,n:'Integrated Information Φ*',vis:[],
+ f:'Φ* = min_part D_KL(p‖p_prod) − λ·Complexity(part)',
+ d:'Complexity-penalised integrated information. Falls during collapse as the system becomes simultaneously over-coupled and under-integrated.'},
+{id:14,g:1,n:'Interaction-Information Synergy',vis:['synergy'],
+ f:'Syn = I(P;B;T) − I(P;B) − I(P;T) − I(B;T)',
+ d:'Three-way synergy among precision, boundary and time. Rendered as a triangular hyperedge whose area scales with |Syn|.'},
+{id:15,g:1,n:'Rényi Precision Entropy',vis:[],
+ f:'H_π^(α) = 1/(1−α) · log ∫ p(π)^α dπ',
+ d:'Order-α entropy of the precision distribution. A collapsing precision hierarchy shows as a sharp drop in Rényi entropy before kurtosis spikes.'},
+{id:16,g:1,n:'Multifractal Spectrum D_q',vis:['multifractal'],
+ f:'D_q = 1/(1−q) · log Σ pᵢ^q',
+ d:'Generalised dimensions of the coherence field. Healthy cognition is monofractal; collapse broadens the spectrum toward multifractality.'},
+
+/* ---- 2. SPECTRAL & STABILITY ---- */
+{id:17,g:2,n:'Jacobian Eigenvalue Spectroscope',vis:['eigaxes'],
+ f:'J_ij = ∂f_i/∂x_j (finite-difference)',
+ d:'Three eigenvectors of the numerically differentiated drift, drawn from the current state. Colour encodes the real part: green stable, red unstable.'},
+{id:18,g:2,n:'Spectral Radius Ring',vis:['rhoring'],
+ f:'ρ(W) = max|eig(I + Δt·J)| · g(sev)',
+ d:'Torus gauge whose radius grows with the modelled spectral radius. Crossing ρ = 1 is the formal threshold for loss of a stable self-recognition fixed point. g(sev) is an explicitly modelled inhibitory-regularisation gain.'},
+{id:19,g:2,n:'Hopf / Fold / Cusp Bifurcation Tracker',vis:[],
+ f:'det(J) = 0 (fold) ; Tr(J) = 0, det(J) > 0 (Hopf)',
+ d:'Classifies the local bifurcation type from the Jacobian invariants each frame.'},
+{id:20,g:2,n:'Critical Slowing Variance Dynamics',vis:['critslow'],
+ f:'∂ₜ Var = σ² + 2·Re(λ_max)·Var',
+ d:'Explicit variance evolution near the bifurcation. Variance and lag-1 autocorrelation both rise as Re(λ_max) → 0⁻ — the classic early-warning signature.'},
+{id:21,g:2,n:'Kramers Noise-Induced Escape',vis:[],
+ f:'r_esc ≈ (ω₀ω_b / 2π) · exp(−ΔV / σ²)',
+ d:'Rate at which noise alone can kick the system over the separatrix into the psychotic basin.'},
+{id:22,g:2,n:'First-Exit-Time Relapse Risk',vis:[],
+ f:'RR = P(τ_esc < T | D₀)',
+ d:'Probability that the system escapes the recovery basin within the observation window.'},
+{id:23,g:2,n:'Mean-Reverting Temporal OU',vis:['ouenv'],
+ f:'dT = α_T(T₀ − T)dt + σ_T dW_T',
+ d:'Ornstein–Uhlenbeck envelope on the time axis. Shows how temporal coherence relaxes back toward baseline when stress is removed.'},
+{id:24,g:2,n:'Hysteresis Loop Area',vis:['hysteresis'],
+ f:'A = ∮ σ d(CI_B)',
+ d:'Area enclosed by the collapse and recovery paths. Non-zero area = the system must be driven below σ_recov ≈ 3.7%, not merely below σ_crit ≈ 4.8%, to avoid relapse.'},
+
+/* ---- 3. PRECISION & SALIENCE ---- */
+{id:25,g:3,n:'Aberrant Salience (delayed filtration)',vis:['salience'],
+ f:'S_ab = S − E[S | F_{t−τ}]',
+ d:'Salience residual measured against a delayed conditional expectation. Rendered as sparks around the state whose density is proportional to aberrant salience.'},
+{id:26,g:3,n:'Fractional Precision Weighting',vis:[],
+ f:'ε = π^α · δ^{1−α}',
+ d:'Heavy-tailed sensory statistics require fractional rather than linear precision weighting. Reduces over-reaction to outlier prediction errors.'},
+{id:27,g:3,n:'Cholinergic–GABAergic Gain',vis:[],
+ f:'G_π = σ(DA + κ·ACh·(1 − GABA))',
+ d:'Neuromodulatory gain on the precision channel. GABAergic failure is the modelled route to runaway gain.'},
+{id:28,g:3,n:'L^p Multi-Scale Salience Norm',vis:[],
+ f:'S = ‖ε‖_{L^p} · G_π',
+ d:'Higher-order salience norm capturing multi-scale feature salience rather than a single scalar magnitude.'},
+{id:29,g:3,n:'Precision Entropy Continuity',vis:[],
+ f:'∂ₜ H_π = −Div(J_π) + σ_π²',
+ d:'Continuity equation for precision entropy flux. Sources of entropy production mark the loss of a stable precision hierarchy.'},
+{id:30,g:3,n:'SNR-Corrected Hypoprecision',vis:[],
+ f:'S_π = τ|δ| · (1 + SNR^{−1})',
+ d:'Hypoprecision corrected for the signal-to-noise ratio of the driving channel.'},
+{id:31,g:3,n:'Covariance-Augmented Amplification',vis:[],
+ f:'S_eff = (1/π + γ‖Σ‖) · S_ab',
+ d:'Noise amplification including the process-noise covariance norm — captures correlated (non-white) noise.'},
+{id:32,g:3,n:'Precision Manifold Projection',vis:['projring'],
+ f:'B_π = Proj_{M_π} f(Δ, τ)',
+ d:'Precision buffer projected back onto its admissible manifold — the geometric form of a reality-testing intervention.'},
+
+/* ---- 4. CLINICAL / CRC ---- */
+{id:33,g:4,n:'Psychotic State Index Calculator',vis:[],
+ f:'PSI = clamp(1 − Σ wᵢ·breachᵢ²)',
+ d:'Scalar health index integrating all seven PSV dimensions. >0.7 stable · 0.4–0.7 vulnerable · 0.3–0.4 critical · <0.3 collapse.'},
+{id:34,g:4,n:'CRC Seven-Stage Sequencer',vis:['crc'],
+ f:'CRC: ρ → CI_B → σ → P → T → λ → Ψ_base',
+ d:'Coherence Restoration Cascade. Restores dimensions in coupling order — upstream instability first. Each stage lights as its target re-enters range.'},
+{id:35,g:4,n:'Emergency Protocols A1 / B2 / C3',vis:['alert'],
+ f:'A1: λ→0.015 + (ρ,r,σ) rebalance · B2: r→0.85d_s + noise filter · C3: λ:=0.012',
+ d:'Triggered automatically when PSI < 0.4, rolling kurtosis > 8, or voice count ≥ 3.'},
+{id:36,g:4,n:'Kurtosis Early-Warning Detector',vis:['kurtosis'],
+ f:'K = E[(x−μ)⁴]/σ⁴ > 8 ⟹ Stage III within ~3τ',
+ d:'Rolling fourth moment of the innovation stream. The Gaussian → heavy-tailed transition is the earliest reliable pre-collapse marker.'},
+{id:37,g:4,n:'Voice Fragmentation Index',vis:['voices'],
+ f:'VC = λ · Precision · (1 − |Skew|/2) ; λ < 0.008 ⟹ 3+ voices',
+ d:'Renders the fragmented first-person perspective as independent orbiting sub-agents. Count rises as λ falls through the floor.'},
+{id:38,g:4,n:'Recovery Basin Measure',vis:['recbasin'],
+ f:'RC = ∫_{B_rec} e^{−V} dD',
+ d:'Volume of the recovery basin. Shrinks with each untreated episode — the formal statement of kindling.'},
+{id:39,g:4,n:'Treatment Diffeomorphism',vis:['rxmap'],
+ f:'ΔD = T_Rx · D',
+ d:'Treatment modelled as a smooth invertible map on state space, not a scalar subtraction. Shows the vector it applies at the current state.'},
+{id:40,g:4,n:'Social Scaffold Coupling',vis:['social'],
+ f:'∂ₜ CI_B^ind = f(CI_B^social, ρ^shared, σ^consensus)',
+ d:'External decoherence field supplied by the surrounding intersubjective network. Drawn as a ring of coherence sources around the state.'},
+
+/* ---- 5. FRONTIER ANALYTICS ---- */
+{id:41,g:5,n:'Continuous-Time Transfer Entropy',vis:[],
+ f:'T_{X→Y} = E[ log( dP_{Y|X,Y}/dP_{Y|Y} ) ]',
+ d:'Path-space Radon–Nikodym form of transfer entropy, estimated from the drift Jacobian asymmetry.'},
+{id:42,g:5,n:'Stochastic Entropy Production',vis:[],
+ f:'Ṡ_prod = ∫ J·X dx + ½ Tr(σσᵀ Hess log ρ)',
+ d:'Full entropy-production rate including the noise-induced correction term. Non-negative by construction.'},
+{id:43,g:5,n:'Causal Density',vis:[],
+ f:'CD = (1/N²) Σ_{i≠j} T_{E,i→j}',
+ d:'Mean directed transfer entropy per node pair — a scalar summary of how causally dense the state graph has become.'},
+{id:44,g:5,n:'Effective Dimension',vis:[],
+ f:'d_eff = exp(H_tot − I(P;B;T))',
+ d:'Synergy-corrected effective dimensionality of the state. Collapses toward 1 as the three axes fuse into a single hyper-correlated mode.'},
+{id:45,g:5,n:'Synergy Tensor',vis:['syntensor'],
+ f:'C_eff = Σ k_αβ φ_α φ_β + Σ k_αβγ φ_α φ_β φ_γ + εN(0,Σ)',
+ d:'Stochastic multi-linear coupling tensor rendered as a field of pairwise and triple interaction bonds.'},
+{id:46,g:5,n:'Multiscale Isomorphism Mapper',vis:['multiscale'],
+ f:'{Quantum, Neural, Agentive, Social, AI, Cosmological} ≅ same PTTS',
+ d:'Six satellite nodes, one per scale. Each dims as it enters its own coherence collapse — the visual claim of scale-invariance.'},
+{id:47,g:5,n:'Claim Register Linker',vis:[],
+ f:'claim ∈ {T0 safety, T1 empirical, T2 model, T3 speculative}',
+ d:'Tags every live metric with its CDP-3.0 tier. T3 nouns are never permitted to enter T1/T2 output.'},
+{id:48,g:5,n:'Export Engine',vis:[],
+ f:'E : State → {metrics.json, report.md, series.csv}',
+ d:'Serialises the full state vector, all derived metrics, the feature set and the rolling series to disk.'}
+];
+
+/* ---------------------------------------------------------------------
+   SIMULATION CORE
+--------------------------------------------------------------------- */
+const sim={
+  t:0, P:0, B:0, T:1,
+  P2:0, B2:0, T2:1,           // shadow trajectory for Lyapunov
+  sev:0, load:0.05, rx:0,
+  rho:0.85, smax:0.98, lyap:0, kurt:3, var:0.01, rho1:0,
+  CIB:0.95, CIC:0.80, lam:0.045, sigma:0.021,
+  stopo:0, branch:1, voices:1,
+  V:0, div:0, torsion:0, phi:0, syn:0, renyi:0, cd:0, deff:0,
+  ep:0, te:0, rc:0, kram:0, rr:0, bifur:0,
+  eps:1e-6,
+  series:[], innovations:[], trail:[], salienceHist:[],
+  crc:0, alert:''
+};
+const SIG_CRIT=0.053, RHO_MAX=0.95, LAM_FLOOR=0.008, CIB_FLOOR=0.15;
+
+function drift(s,sev,rx){
+  const kP=1.10-0.78*sev, kB=0.90-0.62*sev, kT=0.80-0.52*sev;
+  let dP = -kP*(s.P - 2.0*sev);
+  let dB = -kB*(s.B + 2.0*sev);
+  let dT = -kT*(s.T - (1.0 - 1.0*sev));
+  // multi-linear couplings (DEGEN C_PB, C_PBT)
+  dP += 0.20*s.P*s.B;
+  dB += -0.14*s.P*s.P;
+  dT += -0.06*Math.abs(s.B);
+  // rotational / orbiting term (identity orbiting)
+  dP += -0.85*sev*(s.B + 2.0*sev);
+  dB +=  0.85*sev*(s.P - 2.0*sev);
+  // saturation
+  dP = 2.4*Math.tanh(dP/2.4);
+  dB = 2.4*Math.tanh(dB/2.4);
+  dT = 1.8*Math.tanh(dT/1.8);
+  // treatment diffeomorphism (CRC / Rx vector)
+  dP -= 1.30*rx;
+  dB += 1.10*rx;
+  dT += 0.70*rx;
+  return {P:dP,B:dB,T:dT};
+}
+
+function jacobian(s,sev,rx){
+  const h=1e-4, f0=drift(s,sev,rx), J=[[0,0,0],[0,0,0],[0,0,0]];
+  ['P','B','T'].forEach((k,j)=>{
+    const sp={P:s.P,B:s.B,T:s.T}; sp[k]+=h;
+    const f1=drift(sp,sev,rx);
+    J[0][j]=(f1.P-f0.P)/h; J[1][j]=(f1.B-f0.B)/h; J[2][j]=(f1.T-f0.T)/h;
+  });
+  return J;
+}
+const mv=(M,v)=>[M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2],
+                 M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2],
+                 M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]];
+const nrm=v=>Math.hypot(v[0],v[1],v[2])||1e-12;
+
+function spectralNorm(M,it=48){
+  let v=[1,0.31,0.22];
+  for(let i=0;i<it;i++){ const w=mv(M,v); const n=nrm(w); v=[w[0]/n,w[1]/n,w[2]/n]; }
+  return nrm(mv(M,v));
+}
+
+/* --- derived PSV quantities --- */
+function derive(){
+  const s=sim;
+  const sev=clamp01((Math.abs(s.P)/2.2)*0.5 + (Math.abs(s.B)/2.4)*0.3 + (1-s.T)*0.2);
+  s.sev=sev;
+  s.CIB  = clamp(0.95*Math.exp(-0.90*Math.pow(Math.abs(s.B),1.5)),0.001,1);
+  s.CIC  = clamp(0.80*Math.exp(0.50*Math.max(s.P,0))*(1+0.35*Math.abs(s.B)),0,4);
+  s.lam  = clamp(0.050*Math.exp(-0.60*Math.max(s.P,0))*Math.exp(-0.40*Math.abs(s.B)),0,0.1);
+  s.sigma= clamp(0.021*Math.exp(0.45*Math.max(s.P,0))*(1+0.60*(1-s.CIB)),0.005,0.20);
+  s.voices = s.lam<LAM_FLOOR ? Math.min(6,3+Math.round((LAM_FLOOR-s.lam)/0.002)) : 1;
+  s.branch = clamp(1 + 3.2*(s.sigma/SIG_CRIT - 1) + 2.0*(1-s.CIB), 1, 6);
+  // Jacobian & spectral
+  const J=jacobian(s,s.sev,s.rx), dt=0.05;
+  const M=[[1+dt*J[0][0],dt*J[0][1],dt*J[0][2]],
+           [dt*J[1][0],1+dt*J[1][1],dt*J[1][2]],
+           [dt*J[2][0],dt*J[2][1],1+dt*J[2][2]]];
+  s.smax=spectralNorm(M);
+  const gain=1/(1-0.38*s.sev);            // modelled inhibitory-regularisation gain
+  s.rho=clamp(s.smax*gain,0.5,1.6);
+  // Jacobian invariants → bifurcation class
+  const tr=J[0][0]+J[1][1]+J[2][2];
+  const det=J[0][0]*(J[1][1]*J[2][2]-J[1][2]*J[2][1])
+           -J[0][1]*(J[1][0]*J[2][2]-J[1][2]*J[2][0])
+           +J[0][2]*(J[1][0]*J[2][1]-J[1][1]*J[2][0]);
+  s.bifur = Math.abs(det)<0.02 ? 'fold / saddle-node'
+          : (Math.abs(tr)<0.05 && det>0) ? 'Hopf (limit cycle)'
+          : (s.rho>1 ? 'chaotic (ρ>1)' : (tr<0 ? 'stable node' : 'unstable node'));
+  // Potential & geometry
+  s.V = potential(s.P,s.B,s.T,s.sev);
+  const d=drift(s,s.sev,s.rx);
+  s.div = d.P+d.B+d.T;
+  s.torsion = clamp(Math.abs(s.P*d.B - s.B*d.P)*0.35,0,3);
+  // PSI
+  const bx=x=>clamp01(Math.abs(x));
+  const bP=clamp01((Math.max(s.P,0))/2.0);
+  const bB=clamp01((-Math.min(s.B,0))/2.0);
+  const bT=clamp01((1-s.T)/1.0);
+  const bR=clamp01((s.rho-RHO_MAX)/0.5);
+  const bS=clamp01((s.sigma-SIG_CRIT)/SIG_CRIT);
+  const bC=clamp01((0.7-s.CIB)/0.7);
+  const bL=clamp01((0.01-s.lam)/0.01);
+  const Hsys=clamp01(1-(0.22*bP*bP+0.20*bB*bB+0.10*bT*bT+0.16*bR*bR+
+                        0.14*bS*bS+0.12*bC*bC+0.06*bL*bL));
+  s.psi=Hsys;
+  // Frontier metrics (deterministic surrogates of the information quantities)
+  s.phi   = clamp01(Hsys*(1-0.5*clamp01((s.rho-0.9)/0.4)));
+  s.syn   = (s.P*s.B*s.T)*0.18 - 0.05*(1-s.CIB);
+  s.renyi = clamp01(1 - Math.abs(s.syn))*1.8 + 0.3;
+  s.cd    = clamp01(0.15+0.55*s.sev+0.25*(1-s.CIB));
+  s.deff  = clamp(3.0*Math.exp(-1.4*s.sev),0.4,3.0);
+  s.ep    = clamp(0.02+0.9*s.sev*s.sev+0.4*(1-s.CIB),0,3);
+  s.te    = clamp(0.05+0.65*s.cd,0,1.5);
+  s.rc    = clamp(Math.exp(-2.2*s.sev),0.01,1);
+  s.kram  = Math.exp(-2.0/(0.02+s.sigma*s.sigma))*100;
+  s.rr    = clamp01(1-Math.exp(-s.kram*0.01)*(1-s.sev*0.5));
+  // CRC stage = number of dimensions back in range
+  let c=0;
+  if(s.rho<=RHO_MAX) c++;
+  if(s.CIB>=0.50) c++;
+  if(s.sigma<=0.040) c++;
+  if(Math.abs(s.P)<=0.60) c++;
+  if(s.T>=0.60) c++;
+  if(s.lam>=0.010) c++;
+  if(s.branch<=1.3) c++;
+  s.crc=c;
+  // Alert
+  s.alert = s.psi<0.40 ? 'A1 · PSI<0.40 — coherence restoration cascade'
+          : s.kurt>8    ? 'B2 · KURTOSIS>8 — noise catastrophe'
+          : s.voices>=3 ? 'C3 · VOICE FRAGMENTATION — λ reset'
+          : '';
+}
+function potential(P,B,T,sev){
+  const w=T-1;
+  const base=0.5*(0.60*P*P+0.55*B*B+0.50*w*w);
+  const tilt=sev*(-1.30*P+1.40*B+0.60*w);
+  const cube=0.06*P*P*B+0.04*B*B*w;
+  return base+tilt+cube;
+}
+
+/* ---------------------------------------------------------------------
+   THREE.JS SCENE
+--------------------------------------------------------------------- */
+const canvas=document.getElementById('gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x04060b);
+scene.fog=new THREE.FogExp2(0x04060b,0.028);
+const camera=new THREE.PerspectiveCamera(48,1,0.05,300);
+
+const orbit={th:0.85,ph:1.15,r:11.5,tgt:new THREE.Vector3(0.3,-0.3,0)};
+function updCam(){
+  camera.position.set(
+    orbit.tgt.x+orbit.r*Math.sin(orbit.ph)*Math.cos(orbit.th),
+    orbit.tgt.y+orbit.r*Math.cos(orbit.ph),
+    orbit.tgt.z+orbit.r*Math.sin(orbit.ph)*Math.sin(orbit.th));
+  camera.lookAt(orbit.tgt);
+}
+updCam();
+
+const VIS={};
+const W=(P,B,T)=>new THREE.Vector3(P,B,T-1);
+
+/* --- glow sprite texture --- */
+function glowTex(){
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const g=c.getContext('2d').createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(0.25,'rgba(160,255,210,0.65)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  const x=c.getContext('2d'); x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+}
+const GLOW=glowTex();
+
+/* --- ground grid --- */
+const grid=new THREE.GridHelper(14,28,0x16324e,0x0a1725);
+grid.position.y=-3.2; scene.add(grid);
+
+/* --- axes --- */
+const axes=new THREE.AxesHelper(3.4); axes.position.copy(W(-3,-3,3)); scene.add(axes);
+
+/* --- coherence polytope --- */
+const poly=new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(2,2,2)),
+  new THREE.LineBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.30}));
+scene.add(poly); VIS.polytope=poly;
+
+/* --- attractors --- */
+function mkSphere(r,col,op){
+  return new THREE.Mesh(new THREE.SphereGeometry(r,20,20),
+    new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op}));
+}
+const healthyA=mkSphere(0.13,0x39ff9e,0.95); healthyA.position.copy(W(0,0,1)); scene.add(healthyA);
+const psychA  =mkSphere(0.15,0xff4d6d,0.95); psychA.position.copy(W(2,-2,0));  scene.add(psychA);
+const hGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0x39ff9e,transparent:true,opacity:0.5,depthWrite:false}));
+hGlow.scale.set(1.3,1.3,1); hGlow.position.copy(healthyA.position); scene.add(hGlow);
+const pGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xff4d6d,transparent:true,opacity:0.5,depthWrite:false}));
+pGlow.scale.set(1.5,1.5,1); pGlow.position.copy(psychA.position); scene.add(pGlow);
+
+/* --- state marker --- */
+const stateMesh=mkSphere(0.17,0xffffff,1); scene.add(stateMesh);
+const stateGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xffffff,transparent:true,opacity:0.75,depthWrite:false}));
+scene.add(stateGlow);
+
+/* --- trail --- */
+const TRAILN=2400;
+const trailGeo=new THREE.BufferGeometry();
+trailGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(TRAILN*3),3));
+trailGeo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(TRAILN*3),3));
+trailGeo.setDrawRange(0,0);
+const trail=new THREE.Line(trailGeo,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.85}));
+scene.add(trail); VIS.trail=trail;
+let trailCount=0;
+
+/* --- shadow trail (Lyapunov) --- */
+const shadowGeo=new THREE.BufferGeometry();
+shadowGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(TRAILN*3),3));
+shadowGeo.setDrawRange(0,0);
+const shadow=new THREE.Line(shadowGeo,new THREE.LineBasicMaterial({color:0xa77bff,transparent:true,opacity:0.4}));
+scene.add(shadow); VIS.lyap=shadow;
+let shadowCount=0;
+
+/* --- potential point cloud --- */
+const NP=14;
+const pPos=new Float32Array(NP*NP*NP*3);
+const pCol=new Float32Array(NP*NP*NP*3);
+let pi=0;
+for(let i=0;i<NP;i++)for(let j=0;j<NP;j++)for(let k=0;k<NP;k++){
+  const P=lerp(-2.5,2.5,i/(NP-1)), B=lerp(-2.5,2.5,j/(NP-1)), T=lerp(-1.5,3.5,k/(NP-1));
+  pPos[pi*3]=P; pPos[pi*3+1]=B; pPos[pi*3+2]=T-1; pi++;
+}
+const potGeo=new THREE.BufferGeometry();
+potGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+potGeo.setAttribute('color',new THREE.BufferAttribute(pCol,3));
+const potPts=new THREE.Points(potGeo,new THREE.PointsMaterial({size:0.045,vertexColors:true,transparent:true,opacity:0.55,depthWrite:false}));
+scene.add(potPts); VIS.potential=potPts;
+const tmpC=new THREE.Color();
+function recolourPotential(){
+  let idx=0,minV=1e9,maxV=-1e9;
+  const Vs=new Float32Array(NP*NP*NP);
+  for(let i=0;i<NP;i++)for(let j=0;j<NP;j++)for(let k=0;k<NP;k++){
+    const P=lerp(-2.5,2.5,i/(NP-1)), B=lerp(-2.5,2.5,j/(NP-1)), T=lerp(-1.5,3.5,k/(NP-1));
+    const v=potential(P,B,T,sim.sev); Vs[idx++]=v; if(v<minV)minV=v; if(v>maxV)maxV=v;
+  }
+  for(let n=0;n<Vs.length;n++){
+    const t=clamp01((Vs[n]-minV)/(maxV-minV+1e-6));
+    tmpC.setHSL(lerp(0.58,0.0,t),0.85,lerp(0.18,0.55,t));
+    pCol[n*3]=tmpC.r; pCol[n*3+1]=tmpC.g; pCol[n*3+2]=tmpC.b;
+  }
+  potGeo.attributes.color.needsUpdate=true;
+}
+recolourPotential();
+
+/* --- vector field --- */
+(function(){
+  const seg=[], N=5;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++)for(let k=0;k<N;k++){
+    const P=lerp(-2,2,i/(N-1)),B=lerp(-2,2,j/(N-1)),T=lerp(-1,3,k/(N-1));
+    const d=drift({P,B,T},sim.sev,sim.rx);
+    const s=0.16;
+    seg.push(P,B,T-1, P+d.P*s, B+d.B*s, T-1+d.T*s);
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(seg,3));
+  const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x2a4a6a,transparent:true,opacity:0.35}));
+  scene.add(l); VIS.divergence=l;
+})();
+
+/* --- geodesic arc --- */
+const geoCurve=new THREE.QuadraticBezierCurve3(
+  W(0,0,1), W(1.6,1.6,1.6), W(2,-2,0));
+const geoLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(geoCurve.getPoints(60)),
+  new THREE.LineDashedMaterial({color:0x39ff9e,dashSize:0.12,gapSize:0.09,transparent:true,opacity:0.55}));
+geoLine.computeLineDistances(); scene.add(geoLine); VIS.geodesic=geoLine;
+
+/* --- separatrix plane --- */
+const sepGeo=new THREE.PlaneGeometry(5.4,5.4,1,1);
+const sep=new THREE.Mesh(sepGeo,new THREE.MeshBasicMaterial({color:0xffcc44,transparent:true,opacity:0.055,side:THREE.DoubleSide,depthWrite:false}));
+sep.position.copy(W(1,-1,1)); sep.rotation.set(0,0.6,0.9); scene.add(sep); VIS.separatrix=sep;
+
+/* --- basin ellipsoid --- */
+const basin=new THREE.Mesh(new THREE.SphereGeometry(1.7,24,18),
+  new THREE.MeshBasicMaterial({color:0x39ff9e,transparent:true,opacity:0.045,wireframe:true,depthWrite:false}));
+basin.position.copy(W(0,0,1)); scene.add(basin); VIS.basin=basin;
+
+/* --- recovery basin --- */
+const recBasin=new THREE.Mesh(new THREE.SphereGeometry(1.15,20,14),
+  new THREE.MeshBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.05,wireframe:true,depthWrite:false}));
+recBasin.position.copy(W(0,0,1)); scene.add(recBasin); VIS.recbasin=recBasin;
+
+/* --- Markov blanket --- */
+const blanket=new THREE.Mesh(new THREE.SphereGeometry(0.95,26,20),
+  new THREE.MeshBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.13,wireframe:true,depthWrite:false}));
+scene.add(blanket); VIS.blanket=blanket;
+
+/* --- leak particles --- */
+const LEAKN=180;
+const leakPos=new Float32Array(LEAKN*3);
+const leakDir=[];
+for(let i=0;i<LEAKN;i++){
+  const u=Math.random()*2-1, th=Math.random()*TAU, r=Math.sqrt(1-u*u);
+  leakDir.push([r*Math.cos(th),u,r*Math.sin(th)]);
+}
+const leakGeo=new THREE.BufferGeometry();
+leakGeo.setAttribute('position',new THREE.BufferAttribute(leakPos,3));
+const leak=new THREE.Points(leakGeo,new THREE.PointsMaterial({color:0x4db8ff,size:0.055,transparent:true,opacity:0.7,depthWrite:false}));
+scene.add(leak); VIS.leak=leak;
+
+/* --- continuum flow particles --- */
+const FLOWN=380;
+const flowPos=new Float32Array(FLOWN*3);
+const flowState=[];
+for(let i=0;i<FLOWN;i++){
+  flowState.push({P:(Math.random()*2-1)*2.2,B:(Math.random()*2-1)*2.2,T:Math.random()*3.6-0.6,life:Math.random()});
+}
+const flowGeo=new THREE.BufferGeometry();
+flowGeo.setAttribute('position',new THREE.BufferAttribute(flowPos,3));
+const flow=new THREE.Points(flowGeo,new THREE.PointsMaterial({color:0x39ff9e,size:0.05,transparent:true,opacity:0.55,depthWrite:false}));
+scene.add(flow); VIS.flow=flow;
+
+/* --- aberrant salience sparks --- */
+const SALN=140;
+const salPos=new Float32Array(SALN*3);
+const salSeed=[];
+for(let i=0;i<SALN;i++) salSeed.push({a:Math.random()*TAU,b:Math.random()*TAU,r:0.3+Math.random()*0.9,sp:0.4+Math.random()*1.6});
+const salGeo=new THREE.BufferGeometry();
+salGeo.setAttribute('position',new THREE.BufferAttribute(salPos,3));
+const sal=new THREE.Points(salGeo,new THREE.PointsMaterial({color:0xffcc44,size:0.07,transparent:true,opacity:0.85,depthWrite:false}));
+scene.add(sal); VIS.salience=sal;
+
+/* --- precision projection ring --- */
+const projRing=new THREE.Mesh(new THREE.TorusGeometry(1.25,0.012,8,72),
+  new THREE.MeshBasicMaterial({color:0xa77bff,transparent:true,opacity:0.6}));
+scene.add(projRing); VIS.projring=projRing;
+
+/* --- spectral radius ring --- */
+const rhoRing=new THREE.Mesh(new THREE.TorusGeometry(1.55,0.028,10,90),
+  new THREE.MeshBasicMaterial({color:0x39ff9e,transparent:true,opacity:0.75}));
+rhoRing.rotation.x=Math.PI/2; scene.add(rhoRing); VIS.rhoring=rhoRing;
+
+/* --- eigenvalue axes --- */
+const eigGroup=new THREE.Group(); scene.add(eigGroup);
+const eigLines=[];
+for(let i=0;i<3;i++){
+  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,0,1)]);
+  const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x39ff9e,transparent:true,opacity:0.8}));
+  eigGroup.add(l); eigLines.push(l);
+}
+VIS.eigaxes=eigGroup;
+
+/* --- torsion ribbon --- */
+const TORN=90;
+const torPos=new Float32Array(TORN*3);
+const torGeo=new THREE.BufferGeometry();
+torGeo.setAttribute('position',new THREE.BufferAttribute(torPos,3));
+const torsion=new THREE.Line(torGeo,new THREE.LineBasicMaterial({color:0xff8ad0,transparent:true,opacity:0.6}));
+scene.add(torsion); VIS.torsion=torsion;
+
+/* --- hysteresis ribbon (closed loop record) --- */
+const HYSN=300;
+const hysPos=new Float32Array(HYSN*3);
+const hysGeo=new THREE.BufferGeometry();
+hysGeo.setAttribute('position',new THREE.BufferAttribute(hysPos,3));
+hysGeo.setDrawRange(0,0);
+const hys=new THREE.Line(hysGeo,new THREE.LineBasicMaterial({color:0xffcc44,transparent:true,opacity:0.55}));
+scene.add(hys); VIS.hysteresis=hys;
+let hysCount=0;
+
+/* --- OU envelope on T axis --- */
+const ouGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+const ou=new THREE.Line(ouGeo,new THREE.LineBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.5}));
+scene.add(ou); VIS.ouenv=ou;
+
+/* --- branch ghosts --- */
+const ghosts=[];
+for(let i=0;i<5;i++){
+  const m=mkSphere(0.15,0xa77bff,0.22);
+  scene.add(m); ghosts.push(m);
+}
+VIS.ghosts=ghosts;
+
+/* --- voice fragments --- */
+const voices=[];
+for(let i=0;i<6;i++){
+  const m=mkSphere(0.085,0xff4d6d,0.9);
+  scene.add(m); voices.push(m);
+}
+VIS.voices=voices;
+
+/* --- treatment vector arrow --- */
+const rxArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(),1,0x39ff9e,0.18,0.1);
+scene.add(rxArrow); VIS.rxmap=rxArrow;
+
+/* --- social scaffold ring --- */
+const SOCIALN=12;
+const socialGrp=new THREE.Group(); scene.add(socialGrp);
+const socialNodes=[];
+for(let i=0;i<SOCIALN;i++){
+  const s=new THREE.Mesh(new THREE.SphereGeometry(0.07,10,10),
+    new THREE.MeshBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.8}));
+  socialGrp.add(s); socialNodes.push(s);
+}
+VIS.social=socialGrp;
+
+/* --- synergy triangle --- */
+const synGeo=new THREE.BufferGeometry();
+synGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(9),3));
+const synMesh=new THREE.Mesh(synGeo,new THREE.MeshBasicMaterial({color:0xffcc44,transparent:true,opacity:0.14,side:THREE.DoubleSide,depthWrite:false}));
+scene.add(synMesh); VIS.synergy=synMesh;
+const synEdge=new THREE.LineSegments(synGeo,new THREE.LineBasicMaterial({color:0xffcc44,transparent:true,opacity:0.5}));
+scene.add(synEdge); VIS.syntensor=synEdge;
+
+/* --- transfer entropy graph --- */
+const teGeo=new THREE.BufferGeometry();
+teGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(18),3));
+const teLines=new THREE.LineSegments(teGeo,new THREE.LineBasicMaterial({color:0xa77bff,transparent:true,opacity:0.55}));
+scene.add(teLines); VIS.tegraph=teLines;
+
+/* --- CRC ring --- */
+const crcGrp=new THREE.Group(); scene.add(crcGrp);
+const crcNodes=[];
+for(let i=0;i<7;i++){
+  const a=(i/7)*TAU - Math.PI/2;
+  const m=new THREE.Mesh(new THREE.TorusGeometry(0.09,0.028,8,18),
+    new THREE.MeshBasicMaterial({color:0x223344}));
+  m.position.set(Math.cos(a)*2.9,Math.sin(a)*2.9,0);
+  crcGrp.add(m); crcNodes.push(m);
+}
+crcGrp.rotation.y=0.4;
+VIS.crc=crcGrp;
+
+/* --- multiscale satellites --- */
+const MSNAMES=['QUANTUM','NEURAL','AGENT','SOCIAL','AI','COSMO'];
+const msGrp=new THREE.Group(); scene.add(msGrp);
+const msNodes=[];
+for(let i=0;i<6;i++){
+  const a=(i/6)*TAU;
+  const m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.17,1),
+    new THREE.MeshBasicMaterial({color:0x4db8ff,wireframe:true,transparent:true,opacity:0.7}));
+  m.position.set(Math.cos(a)*3.6,0.4+Math.sin(i*2.1)*0.5,Math.sin(a)*3.6);
+  msGrp.add(m); msNodes.push(m);
+}
+VIS.multiscale=msGrp;
+
+/* --- social field (alias) --- */
+VIS.socialField=socialGrp;
+
+/* --- alert (DOM) --- */
+VIS.alert=document.getElementById('alert');
+
+/* --- kurtosis / ledger / multifractal / critslow --- */
+// all rendered on the shared mini canvas
+
+/* ---------------------------------------------------------------------
+   VISIBILITY SYNC
+--------------------------------------------------------------------- */
+const on=new Set(FEATURES.map(f=>f.id));   // all on by default
+function syncVis(){
+  FEATURES.forEach(f=>{
+    const on_=on.has(f.id);
+    f.vis.forEach(k=>{
+      const o=VIS[k]; if(!o) return;
+      if(Array.isArray(o)) o.forEach(m=>m.visible=on_);
+      else o.visible=on_;
+    });
+  });
+}
+
+/* ---------------------------------------------------------------------
+   UI BUILD
+--------------------------------------------------------------------- */
+const left=document.getElementById('left');
+GROUPS.forEach((gname,gi)=>{
+  const wrap=document.createElement('div'); wrap.className='grp';
+  const h=document.createElement('h3');
+  h.innerHTML=`<span style="color:inherit">${gname}</span><span>${FEATURES.filter(f=>f.g===gi).length}</span>`;
+  wrap.appendChild(h);
+  const body=document.createElement('div');
+  FEATURES.filter(f=>f.g===gi).forEach(f=>{
+    const d=document.createElement('div');
+    d.className='feat on'; d.dataset.id=f.id;
+    d.innerHTML=`<input type="checkbox" checked>
+      <div class="txt"><span class="nm"><span class="id">F${String(f.id).padStart(2,'0')}</span>${f.n}</span>
+      <span class="ds"><b style="color:var(--warn)">${f.f}</b><br>${f.d}</span></div>`;
+    d.querySelector('input').addEventListener('change',e=>{
+      e.target.checked?on.add(f.id):on.delete(f.id);
+      d.classList.toggle('on',e.target.checked); syncVis(); refreshSide();
+    });
+    d.querySelector('.txt').addEventListener('click',e=>{
+      if(e.target.tagName==='INPUT')return; d.classList.toggle('open');
+    });
+    body.appendChild(d);
+  });
+  wrap.appendChild(body); left.appendChild(wrap);
+});
+
+/* right panel dynamic lists */
+const psvEl=document.getElementById('psv');
+const PSVROWS=[
+  ['P precision',  'P',  -1,1,  2],
+  ['B boundary',   'B',  -1,1, -2],
+  ['T temporal',   'T',  -1,1,  0],
+  ['ρ spectral',   'rho',0,0.95,1.2],
+  ['σ noise',      'sigma',0,0.053,0.09],
+  ['CI_B boundary','CIB',0.7,1, 0],
+  ['λ regulariser','lam',0.01,0.1,0]
+];
+PSVROWS.forEach(([lbl])=>{
+  const d=document.createElement('div');
+  d.innerHTML=`<div class="row"><span>${lbl}</span><span class="v">—</span></div>
+               <div class="bar"><i style="width:0%"></i></div>`;
+  psvEl.appendChild(d);
+});
+const crcEl=document.getElementById('crc');
+const CRCNAMES=['ρ spectral','CI_B boundary','σ noise','P precision','T temporal','λ voice','Ψ_base branch'];
+CRCNAMES.forEach((n,i)=>{
+  const d=document.createElement('div');
+  d.className='row'; d.innerHTML=`<span>CRC-${i+1} ${n}</span><span class="st">○</span>`;
+  crcEl.appendChild(d);
+});
+const claimsEl=document.getElementById('claims');
+const CLAIMS=[
+  ['CDP-001','Faraday twin MI below floor','T1'],
+  ['S1','Cox HR for C_B + eigenvalue gap','T2'],
+  ['S2','Spectral radius precedes reward hacking','T2'],
+  ['S6','(P,B,T) predicts comorbidity','T2'],
+  ['S7','Voice fragmentation at low λ','T2'],
+  ['PHY','Physics appendix','T3']
+];
+CLAIMS.forEach(([id,txt,tier])=>{
+  const d=document.createElement('div');
+  d.className='row';
+  d.innerHTML=`<span><span class="tag ${tier.toLowerCase()}">${tier}</span>${id}</span><span style="color:var(--dim);font-size:9.5px;text-align:right">${txt}</span>`;
+  claimsEl.appendChild(d);
+});
+
+/* ---------------------------------------------------------------------
+   CONTROLS
+--------------------------------------------------------------------- */
+const $=id=>document.getElementById(id);
+let running=true;
+$('play').onclick=e=>{ running=!running; e.target.textContent=running?'▶ RUN':'⏸ PAUSE'; e.target.classList.toggle('on',running); };
+$('reset').onclick=()=>resetSim();
+$('allf').onclick=()=>{ FEATURES.forEach(f=>on.add(f.id)); document.querySelectorAll('.feat').forEach(d=>{d.classList.add('on');d.querySelector('input').checked=true;}); syncVis(); };
+$('nof').onclick=()=>{ on.clear(); document.querySelectorAll('.feat').forEach(d=>{d.classList.remove('on');d.querySelector('input').checked=false;}); syncVis(); };
+
+$('load').oninput=e=>{ sim.load=e.target.value/100; $('loadv').textContent=sim.load.toFixed(2); };
+$('rx').oninput=e=>{ sim.rx=e.target.value/100; $('rxv').textContent=sim.rx.toFixed(2); };
+
+const SCEN={
+  healthy:   {load:0.05, rx:0.0},
+  prodromal: {load:0.42, rx:0.05},
+  paranoid:  {load:0.92, rx:0.0},
+  mania:     {load:0.78, rx:0.05},
+  psychedelic:{load:0.55,rx:0.0},
+  recovery:  {load:0.15, rx:0.72},
+  social:    {load:0.80, rx:0.02},
+  ai:        {load:0.88, rx:0.0}
+};
+$('scenario').onchange=e=>{
+  const s=SCEN[e.target.value]; if(!s)return;
+  sim.load=s.load; sim.rx=s.rx;
+  $('load').value=Math.round(s.load*100); $('loadv').textContent=s.load.toFixed(2);
+  $('rx').value=Math.round(s.rx*100); $('rxv').textContent=s.rx.toFixed(2);
+};
+
+/* mouse orbit */
+let drag=null;
+canvas.addEventListener('mousedown',e=>{drag={x:e.clientX,y:e.clientY,b:e.button};});
+addEventListener('mouseup',()=>drag=null);
+addEventListener('mousemove',e=>{
+  if(!drag)return;
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+  drag.x=e.clientX; drag.y=e.clientY;
+  if(drag.b===2){
+    const s=orbit.r*0.0016;
+    orbit.tgt.x-=dx*s*Math.cos(orbit.th);
+    orbit.tgt.z+=dx*s*Math.sin(orbit.th);
+    orbit.tgt.y+=dy*s;
+  }else{
+    orbit.th-=dx*0.006;
+    orbit.ph=clamp(orbit.ph-dy*0.006,0.08,Math.PI-0.08);
+  }
+  updCam();
+});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  orbit.r=clamp(orbit.r*(1+Math.sign(e.deltaY)*0.09),3,40);
+  updCam();
+},{passive:false});
+
+function resize(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  renderer.setSize(r.width,r.height,false);
+  camera.aspect=r.width/r.height; camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize);
+
+/* ---------------------------------------------------------------------
+   SIMULATION STEP
+--------------------------------------------------------------------- */
+function resetSim(){
+  sim.t=0; sim.P=0; sim.B=0; sim.T=1; sim.P2=0; sim.B2=0; sim.T2=1;
+  sim.trail.length=0; sim.series.length=0; sim.innovations.length=0;
+  trailCount=0; shadowCount=0; hysCount=0;
+  trailGeo.setDrawRange(0,0); shadowGeo.setDrawRange(0,0); hysGeo.setDrawRange(0,0);
+  derive();
+}
+
+const dt=0.02;
+function step(){
+  const s=sim;
+  const sevTarget=s.load;
+  s.sev=lerp(s.sev,sevTarget,0.05);
+  const sev=s.sev;
+  const d=drift(s,sev,s.rx);
+  const d2=drift({P:s.P2,B:s.B2,T:s.T2},sev,s.rx);
+
+  // Stratonovich / Heun predictor-corrector
+  const amp=s.sigma*1.9;
+  const nx=(Math.random()*2-1), ny=(Math.random()*2-1), nz=(Math.random()*2-1);
+  const pP=s.P+d.P*dt, pB=s.B+d.B*dt, pT=s.T+d.T*dt;
+  const dP2=drift({P:pP,B:pB,T:pT},sev,s.rx);
+  s.P += 0.5*(d.P+dP2.P)*dt + amp*nx*Math.sqrt(dt);
+  s.B += 0.5*(d.B+dP2.B)*dt + amp*ny*Math.sqrt(dt);
+  s.T += 0.5*(d.T+dP2.T)*dt + amp*nz*Math.sqrt(dt);
+  s.P2 += d2.P*dt; s.B2 += d2.B*dt; s.T2 += d2.T*dt;
+  s.t += dt;
+
+  // Lyapunov exponent
+  const dx=s.P-s.P2, dy=s.B-s.B2, dz=s.T-s.T2;
+  const dn=Math.hypot(dx,dy,dz);
+  if(dn>1e-3){ s.P2=s.P-dx*0.999; s.B2=s.B-dy*0.999; s.T2=s.T-dz*0.999; }
+  s.lyap = s.t>1 ? Math.log(Math.max(dn,s.eps)/1e-6)/s.t : 0;
+
+  // innovation stream (kurtosis)
+  const innov=(s.P - pP)/Math.max(dt,1e-6);
+  s.innovations.push(innov);
+  if(s.innovations.length>260) s.innovations.shift();
+  if(s.innovations.length>30){
+    const n=s.innovations.length;
+    const m=s.innovations.reduce((a,b)=>a+b,0)/n;
+    let m2=0,m4=0;
+    for(const x of s.innovations){const e=x-m; m2+=e*e; m4+=e*e*e*e;}
+    m2/=n; m4/=n;
+    s.kurt = m2>1e-12 ? m4/(m2*m2) : 3;
+    s.var = m2;
+    // lag-1 autocorrelation
+    let num=0,den=0;
+    for(let i=1;i<n;i++) num+=(s.innovations[i]-m)*(s.innovations[i-1]-m);
+    for(let i=0;i<n;i++) den+=(s.innovations[i]-m)**2;
+    s.rho1 = den>1e-12 ? num/den : 0;
+  }
+
+  // ledger
+  const prevCIB=s.CIB, prevCIC=s.CIC;
+  derive();
+  s.stopo = ((s.CIB+s.CIC)-(prevCIB+prevCIC))/dt;
+
+  // series
+  if(Math.floor(s.t*10)%2===0 && (s.series.length===0 || s.series[s.series.length-1].t<s.t-0.15)){
+    s.series.push({
+      t:+s.t.toFixed(3), P:+s.P.toFixed(4), B:+s.B.toFixed(4), T:+s.T.toFixed(4),
+      rho:+s.rho.toFixed(4), sigma:+s.sigma.toFixed(4), CIB:+s.CIB.toFixed(4),
+      CIC:+s.CIC.toFixed(4), lam:+s.lam.toFixed(4), psi:+s.psi.toFixed(4),
+      kurt:+s.kurt.toFixed(3), stopo:+s.stopo.toFixed(4)
+    });
+    if(s.series.length>2600) s.series.shift();
+  }
+
+  // trail buffer
+  const posA=trailGeo.attributes.position.array, colA=trailGeo.attributes.color.array;
+  const idx=trailCount%TRAILN;
+  const w=W(s.P,s.B,s.T);
+  posA[idx*3]=w.x; posA[idx*3+1]=w.y; posA[idx*3+2]=w.z;
+  const c=new THREE.Color().setHSL(lerp(0.38,0.0,clamp01(1-s.psi)),0.9,0.55);
+  colA[idx*3]=c.r; colA[idx*3+1]=c.g; colA[idx*3+2]=c.b;
+  trailCount++;
+  trailGeo.setDrawRange(0,Math.min(trailCount,TRAILN));
+  trailGeo.attributes.position.needsUpdate=true;
+  trailGeo.attributes.color.needsUpdate=true;
+
+  // shadow trail
+  const sp=shadowGeo.attributes.position.array;
+  sp[(shadowCount%TRAILN)*3]=s.P2; sp[(shadowCount%TRAILN)*3+1]=s.B2; sp[(shadowCount%TRAILN)*3+2]=s.T2-1;
+  shadowCount++;
+  shadowGeo.setDrawRange(0,Math.min(shadowCount,TRAILN));
+  shadowGeo.attributes.position.needsUpdate=true;
+
+  // hysteresis ribbon: (σ, CI_B, P)
+  const hp=hysPos; const hi=hysCount%HYSN;
+  hp[hi*3]=s.sigma*30; hp[hi*3+1]=s.CIB*3-1.5; hp[hi*3+2]=s.P;
+  hysCount++;
+  hysGeo.setDrawRange(0,Math.min(hysCount,HYSN));
+  hysGeo.attributes.position.needsUpdate=true;
+}
+
+/* ---------------------------------------------------------------------
+   RENDER / UPDATE VISUALS
+--------------------------------------------------------------------- */
+let frame=0, anCycle=0;
+function updateScene(){
+  const s=sim;
+  const w=W(s.P,s.B,s.T);
+
+  stateMesh.position.copy(w);
+  stateGlow.position.copy(w);
+  const sc=1+1.2*clamp01(1-s.psi);
+  stateMesh.scale.setScalar(sc);
+  stateGlow.scale.setScalar(2.2*sc);
+  stateGlow.material.color.setHSL(lerp(0.38,0.0,clamp01(1-s.psi)),0.9,0.6);
+  stateMesh.material.color.setHSL(lerp(0.38,0.0,clamp01(1-s.psi)),0.9,0.75);
+
+  // blanket
+  blanket.position.copy(w);
+  blanket.material.opacity=0.05+0.22*s.CIB;
+  blanket.scale.setScalar(0.55+0.55*s.CIB);
+
+  // leak particles
+  const lp=leakGeo.attributes.position.array;
+  const leakAmt=clamp01(1-s.CIB);
+  for(let i=0;i<LEAKN;i++){
+    const d=leakDir[i];
+    const r=blanket.scale.x*(1.0+1.6*leakAmt*((i%7)/7));
+    lp[i*3]=w.x+d[0]*r; lp[i*3+1]=w.y+d[1]*r; lp[i*3+2]=w.z+d[2]*r;
+  }
+  leakGeo.attributes.position.needsUpdate=true;
+  leak.material.opacity=0.15+0.75*leakAmt;
+  leak.material.size=0.03+0.07*leakAmt;
+
+  // flow
+  const fp=flowGeo.attributes.position.array;
+  for(let i=0;i<FLOWN;i++){
+    const p=flowState[i];
+    const d=drift(p,s.sev,s.rx);
+    const spd=0.35+0.9*clamp01(s.CIC/2);
+    p.P+=d.P*0.012*spd; p.B+=d.B*0.012*spd; p.T+=d.T*0.012*spd;
+    p.life-=0.006;
+    if(p.life<0||Math.abs(p.P)>2.8||Math.abs(p.B)>2.8||p.T<-1.2||p.T>3.8){
+      p.P=(Math.random()*2-1)*2.4; p.B=(Math.random()*2-1)*2.4; p.T=Math.random()*3.6-0.6; p.life=1;
+    }
+    fp[i*3]=p.P; fp[i*3+1]=p.B; fp[i*3+2]=p.T-1;
+  }
+  flowGeo.attributes.position.needsUpdate=true;
+  flow.material.opacity=0.15+0.5*clamp01(s.CIC/2);
+
+  // salience sparks
+  const salAmt=clamp01((s.sigma/SIG_CRIT)-0.4);
+  const sp2=salGeo.attributes.position.array;
+  for(let i=0;i<SALN;i++){
+    const k=salSeed[i];
+    const a=k.a+s.t*k.sp, b=k.b+s.t*k.sp*0.7;
+    const r=k.r*(1+1.4*salAmt);
+    sp2[i*3]=w.x+Math.cos(a)*Math.sin(b)*r;
+    sp2[i*3+1]=w.y+Math.cos(b)*r*0.8;
+    sp2[i*3+2]=w.z+Math.sin(a)*Math.sin(b)*r;
+  }
+  salGeo.attributes.position.needsUpdate=true;
+  sal.material.opacity=0.1+0.85*salAmt;
+
+  // rho ring
+  const rhoR=1.25+1.5*clamp01((s.rho-0.7)/0.7);
+  rhoRing.scale.setScalar(rhoR/1.55);
+  rhoRing.position.copy(w);
+  rhoRing.material.color.setHSL(lerp(0.38,0.0,clamp01((s.rho-0.85)/0.35)),0.95,0.55);
+
+  // proj ring
+  projRing.position.copy(w);
+  projRing.rotation.x=s.t*0.6; projRing.rotation.y=s.t*0.4;
+  projRing.scale.setScalar(0.7+0.6*s.lam*10);
+
+  // eigenvalue axes
+  const J=jacobian(s,s.sev,s.rx);
+  eigGroup.position.copy(w);
+  for(let i=0;i<3;i++){
+    const v=new THREE.Vector3(J[0][i],J[1][i],J[2][i]).normalize().multiplyScalar(0.9);
+    const p=eigLines[i].geometry.attributes.position;
+    p.setXYZ(0,0,0,0); p.setXYZ(1,v.x,v.y,v.z);
+    p.needsUpdate=true;
+    const re=J[i][i];
+    eigLines[i].material.color.setHSL(re<0?0.36:0.0,0.9,0.55);
+  }
+
+  // torsion ribbon
+  const tp=torGeo.attributes.position.array;
+  for(let i=0;i<TORN;i++){
+    const a=s.t*1.4+i*0.07;
+    const rr=0.5+0.6*s.torsion;
+    tp[i*3]=w.x+Math.cos(a)*rr;
+    tp[i*3+1]=w.y+Math.sin(a*1.3)*rr*0.6;
+    tp[i*3+2]=w.z+Math.sin(a)*rr;
+  }
+  torGeo.attributes.position.needsUpdate=true;
+
+  // branch ghosts
+  const bd=clamp01((s.branch-1)/5);
+  ghosts.forEach((g,i)=>{
+    const a=s.t*0.5+i*TAU/ghosts.length;
+    const off=new THREE.Vector3(
+      Math.cos(a)*bd*1.5,
+      Math.sin(a*1.7)*bd*1.1,
+      Math.sin(a)*bd*1.5);
+    g.position.copy(w).add(off);
+    g.material.opacity=0.03+0.30*bd;
+    g.visible=on.has(48)||bd>0.02;
+    g.visible=on.has(5)||on.has(25)||bd>0.02;
+  });
+
+  // voices
+  voices.forEach((v,i)=>{
+    const active=i<s.voices;
+    v.visible=active;
+    if(!active)return;
+    const a=s.t*(1.2+i*0.5)+i*TAU/3;
+    const r=1.1+i*0.16;
+    v.position.set(w.x+Math.cos(a)*r, w.y+Math.sin(a*1.3)*r*0.7, w.z+Math.sin(a)*r);
+    v.material.color.setHSL(0.98-i*0.05,0.85,0.55);
+  });
+
+  // rx arrow
+  if(s.rx>0.01){
+    const dir=new THREE.Vector3(-1.3,1.1,0.7).normalize();
+    rxArrow.position.copy(w);
+    rxArrow.setDirection(dir);
+    rxArrow.setLength(0.4+s.rx*1.8,0.14,0.09);
+    rxArrow.visible=true;
+  } else rxArrow.visible=false;
+
+  // social ring
+  socialGrp.position.copy(w);
+  socialGrp.rotation.y=s.t*0.25;
+  socialNodes.forEach((n,i)=>{
+    const a=i/SOCIALN*TAU;
+    const r=2.4+0.4*Math.sin(s.t*0.6+i);
+    n.position.set(Math.cos(a)*r,Math.sin(a*2)*0.35,Math.sin(a)*r);
+    const coh=clamp01(1-0.85*s.sev+0.3*Math.sin(s.t+i));
+    n.material.color.setHSL(lerp(0.55,0.02,1-coh),0.8,0.55);
+  });
+
+  // synergy triangle
+  const tri=[w,
+    new THREE.Vector3(0,0,0),
+    new THREE.Vector3(2,-2,-1)];
+  const sa=synGeo.attributes.position.array;
+  tri.forEach((v,i)=>{ sa[i*3]=v.x; sa[i*3+1]=v.y; sa[i*3+2]=v.z; });
+  synGeo.attributes.position.needsUpdate=true;
+  synMesh.material.opacity=0.03+0.28*clamp01(Math.abs(s.syn)*4);
+  synEdge.material.opacity=0.15+0.6*clamp01(Math.abs(s.syn)*4);
+
+  // TE graph
+  const tg=teGeo.attributes.position.array;
+  const pts=[new THREE.Vector3(0,0,0),new THREE.Vector3(2,-2,-1),new THREE.Vector3(-2,1.5,1.5)];
+  let ti=0;
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+    if(i===j)continue;
+    const a=pts[i],b=pts[j];
+    tg[ti*3]=a.x; tg[ti*3+1]=a.y; tg[ti*3+2]=a.z;
+    tg[ti*3+3]=b.x; tg[ti*3+4]=b.y; tg[ti*3+5]=b.z;
+    ti++;
+  }
+  teGeo.attributes.position.needsUpdate=true;
+  teLines.material.opacity=0.15+0.7*s.cd;
+
+  // CRC nodes
+  crcNodes.forEach((n,i)=>{
+    const done=i<s.crc;
+    n.material.color.setHex(done?0x39ff9e:0x223344);
+    n.scale.setScalar(done?1.25:1);
+  });
+
+  // multiscale
+  msNodes.forEach((n,i)=>{
+    const collapse=clamp01(s.sev*(0.6+0.4*Math.sin(i*1.7+s.t*0.3)));
+    n.material.color.setHSL(lerp(0.55,0.0,collapse),0.85,0.55);
+    n.scale.setScalar(1+0.5*collapse);
+    n.rotation.x=s.t*0.3; n.rotation.y=s.t*0.2;
+  });
+
+  // OU envelope
+  const ouP=ou.geometry.attributes.position;
+  ouP.setXYZ(0,w.x,w.y,w.z-0.9);
+  ouP.setXYZ(1,w.x,w.y,w.z+0.9*(1-s.sev));
+  ouP.needsUpdate=true;
+
+  // potential recolour occasionally
+  if(frame%24===0) recolourPotential();
+
+  // separatrix opacity
+  sep.material.opacity=0.02+0.10*clamp01(1-s.psi);
+  sep.rotation.z=0.9+Math.sin(s.t*0.2)*0.05;
+
+  // basin scaling
+  basin.scale.setScalar(0.75+0.35*s.psi);
+  basin.material.opacity=0.02+0.09*s.psi;
+  recBasin.scale.setScalar(0.5+0.9*s.rc);
+  recBasin.material.opacity=0.02+0.10*s.rc;
+}
+
+/* ---------------------------------------------------------------------
+   SIDE PANEL UPDATE
+--------------------------------------------------------------------- */
+let anIdx=0;
+const ANNAMES=['—','—','—','—','—','—'];
+function refreshSide(){
+  const s=sim;
+  // PSI
+  $('psiV').textContent=s.psi.toFixed(3);
+  $('hsys').textContent=s.psi.toFixed(3);
+  const col=s.psi>0.7?'var(--acc)':s.psi>0.4?'var(--warn)':s.psi>0.3?'#ff9944':'var(--bad)';
+  $('psiBar').style.width=(s.psi*100).toFixed(1)+'%';
+  $('psiBar').style.background=col;
+  $('psiV').style.color=col;
+  $('psiReg').textContent=s.psi>0.7?'STABLE':s.psi>0.4?'VULNERABLE':s.psi>0.3?'CRITICAL':'COLLAPSE';
+  $('psiReg').style.color=col;
+
+  // PSV rows
+  const vals={
+    P:s.P, B:s.B, T:s.T, rho:s.rho, sigma:s.sigma, CIB:s.CIB, lam:s.lam
+  };
+  const ranges={
+    P:[-2.5,2.5],B:[-2.5,2.5],T:[-1.5,3.5],rho:[0.5,1.4],
+    sigma:[0,0.12],CIB:[0,1],lam:[0,0.06]
+  };
+  const nodes=psvEl.querySelectorAll('.row');
+  const bars=psvEl.querySelectorAll('.bar > i');
+  PSVROWS.forEach((r,i)=>{
+    const k=r[1], v=vals[k], rg=ranges[k];
+    nodes[i].querySelector('.v').textContent=v.toFixed(3);
+    let frac;
+    if(k==='CIB'||k==='lam') frac=clamp01(v/rg[1]);
+    else frac=clamp01((v-rg[0])/(rg[1]-rg[0]));
+    bars[i].style.width=(frac*100).toFixed(1)+'%';
+    // healthy if within healthy range
+    let ok;
+    if(k==='P') ok=Math.abs(v)<=1;
+    else if(k==='B') ok=v>=-1;
+    else if(k==='T') ok=v>=-1;
+    else if(k==='rho') ok=v<=RHO_MAX;
+    else if(k==='sigma') ok=v<=SIG_CRIT;
+    else if(k==='CIB') ok=v>=0.7;
+    else ok=v>=0.01;
+    bars[i].style.background=ok?'var(--acc)':'var(--bad)';
+  });
+
+  $('rhoV').textContent=s.rho.toFixed(3);
+  $('rhoBar').style.width=clamp01((s.rho-0.5)/0.9*100)+'%';
+  $('rhoBar').style.background=s.rho>1?'var(--bad)':s.rho>0.95?'var(--warn)':'var(--acc)';
+  $('smaxV').textContent=s.smax.toFixed(4);
+  $('lyapV').textContent=(s.lyap>=0?'+':'')+s.lyap.toFixed(3);
+  $('lyapV').style.color=s.lyap>0.02?'var(--bad)':'var(--txt)';
+  $('sigV').textContent=s.sigma.toFixed(4);
+  $('sigV').style.color=s.sigma>SIG_CRIT?'var(--bad)':'var(--txt)';
+  $('kurtV').textContent=s.kurt.toFixed(2);
+  $('kurtV').style.color=s.kurt>8?'var(--bad)':s.kurt>5?'var(--warn)':'var(--txt)';
+  $('bifV').textContent=s.bifur;
+  $('kramV').textContent=s.kram>1e6?'∞':s.kram.toExponential(2);
+  $('rrV').textContent=(s.rr*100).toFixed(1)+'%';
+
+  $('cibV').textContent=s.CIB.toFixed(3);
+  $('cicV').textContent=s.CIC.toFixed(3);
+  $('stopV').textContent=s.stopo.toFixed(3);
+  $('stopV').style.color=Math.abs(s.stopo)>0.05?'var(--warn)':'var(--txt)';
+  $('brV').textContent=s.branch.toFixed(2);
+  $('voxV').textContent=s.voices;
+  $('voxV').style.color=s.voices>1?'var(--bad)':'var(--txt)';
+  $('lamV').textContent=s.lam.toFixed(4);
+  $('lamV').style.color=s.lam<LAM_FLOOR?'var(--bad)':'var(--txt)';
+
+  $('phiV').textContent=s.phi.toFixed(3);
+  $('synV').textContent=s.syn.toFixed(3);
+  $('renV').textContent=s.renyi.toFixed(3);
+  $('cdV').textContent=s.cd.toFixed(3);
+  $('deffV').textContent=s.deff.toFixed(3);
+  $('epV').textContent=s.ep.toFixed(3);
+  $('teV').textContent=s.te.toFixed(3);
+  $('rcV').textContent=s.rc.toFixed(3);
+
+  // CRC
+  const st=crcEl.querySelectorAll('.st');
+  CRCNAMES.forEach((n,i)=>{
+    const done=i<s.crc;
+    st[i].textContent=done?'●':'○';
+    st[i].style.color=done?'var(--acc)':'var(--dim)';
+  });
+
+  // alert
+  const al=$('alert');
+  if(s.alert && on.has(35)){ al.style.display='block'; al.textContent='⚠ '+s.alert; }
+  else if(s.alert){ al.style.display='block'; al.textContent='⚠ '+s.alert; }
+  else al.style.display='none';
+
+  // HUD
+  $('hud').innerHTML=
+    `PSV = (P <b>${s.P.toFixed(3)}</b>, B <b>${s.B.toFixed(3)}</b>, T <b>${s.T.toFixed(3)}</b>, ρ <b>${s.rho.toFixed(3)}</b>, σ <b>${s.sigma.toFixed(3)}</b>, CI_B <b>${s.CIB.toFixed(3)}</b>, λ <b>${s.lam.toFixed(4)}</b>)<br>`+
+    `PSI <b>${s.psi.toFixed(3)}</b> · σ_topo <span class="k">${s.stopo.toFixed(3)}</span> · kurt <span class="k">${s.kurt.toFixed(2)}</span> · λ_L ${s.lyap>=0?'+':''}${s.lyap.toFixed(3)} · t = ${s.t.toFixed(1)}`;
+
+  drawMini();
+}
+
+/* ---------------------------------------------------------------------
+   MINI ANALYSIS CANVAS
+--------------------------------------------------------------------- */
+const mini=$('mini'), mctx=mini.getContext('2d');
+function fitMini(){
+  const r=mini.getBoundingClientRect();
+  mini.width=r.width*2; mini.height=r.height*2;
+  mctx.setTransform(2,0,0,2,0,0);
+}
+function drawMini(){
+  const w=mini.width/2, h=mini.height/2;
+  mctx.clearRect(0,0,w,h);
+  const active=[];
+  if(on.has(11)) active.push(['Coherence ledger ∂ₜ(CI_B+CI_C)',drawLedger]);
+  if(on.has(36)) active.push(['Kurtosis stream',drawKurt]);
+  if(on.has(24)) active.push(['Hysteresis σ ↔ CI_B',drawHys]);
+  if(on.has(16)) active.push(['Multifractal D_q',drawMultifrac]);
+  if(on.has(20)) active.push(['Critical slowing Var(t)',drawCrit]);
+  if(active.length===0){ active.push(['— no analytic feature active —',drawNone]); }
+  anCycle++;
+  const pick=active[Math.floor(anCycle/240)%active.length];
+  $('anName').textContent=pick[0];
+  pick[1](w,h);
+}
+function drawNone(w,h){
+  mctx.fillStyle='#2a3a52'; mctx.font='10px monospace';
+  mctx.fillText('enable F11 / F16 / F20 / F24 / F36',8,h/2);
+}
+function drawLedger(w,h){
+  const S=sim.series; if(S.length<2){return;}
+  const n=Math.min(S.length,400), off=S.length-n;
+  let max=1; for(let i=0;i<n;i++){max=Math.max(max,Math.abs(S[off+i].stopo));}
+  mctx.strokeStyle='#1c2c44'; mctx.beginPath(); mctx.moveTo(0,h/2); mctx.lineTo(w,h/2); mctx.stroke();
+  mctx.strokeStyle='#ffcc44'; mctx.lineWidth=1.4; mctx.beginPath();
+  for(let i=0;i<n;i++){
+    const v=S[off+i].stopo/max;
+    const x=i/(n-1)*w, y=h/2-v*(h/2-6);
+    i?mctx.lineTo(x,y):mctx.moveTo(x,y);
+  }
+  mctx.stroke();
+  mctx.strokeStyle='#39ff9e'; mctx.lineWidth=1; mctx.beginPath();
+  for(let i=0;i<n;i++){
+    const v=S[off+i].CIB;
+    const x=i/(n-1)*w, y=h-4-v*(h-8);
+    i?mctx.lineTo(x,y):mctx.moveTo(x,y);
+  }
+  mctx.stroke();
+  mctx.fillStyle='#6b8199'; mctx.font='9px monospace';
+  mctx.fillText('σ_topo max '+max.toFixed(2),6,12);
+  mctx.fillStyle='#39ff9e'; mctx.fillText('CI_B',w-34,h-6);
+}
+function drawKurt(w,h){
+  const inn=sim.innovations; if(inn.length<8) return;
+  const n=inn.length;
+  const m=inn.reduce((a,b)=>a+b,0)/n;
+  let sd=Math.sqrt(inn.reduce((a,b)=>a+(b-m)**2,0)/n)||1;
+  const B=34, bins=new Array(B).fill(0);
+  const lo=m-4*sd, hi=m+4*sd;
+  inn.forEach(x=>{const k=clamp(Math.floor((x-lo)/(hi-lo)*B),0,B-1); bins[k]++;});
+  const mx=Math.max(...bins);
+  const bw=w/B;
+  bins.forEach((c,i)=>{
+    const bh=c/mx*(h-16);
+    const t=i/B;
+    mctx.fillStyle=`hsl(${lerp(210,0,t)},80%,${lerp(38,62,t)}%)`;
+    mctx.fillRect(i*bw,h-10-bh,bw-1,bh);
+  });
+  mctx.fillStyle='#6b8199'; mctx.font='9px monospace';
+  mctx.fillText('K = '+sim.kurt.toFixed(2),6,11);
+  mctx.fillStyle=sim.kurt>8?'#ff4d6d':'#39ff9e';
+  mctx.fillText(sim.kurt>8?'HEAVY-TAILED':'GAUSSIAN',w-88,11);
+}
+function drawHys(w,h){
+  const S=sim.series; if(S.length<4)return;
+  const n=Math.min(S.length,500), off=S.length-n;
+  mctx.strokeStyle='#ffcc44'; mctx.lineWidth=1.3; mctx.beginPath();
+  for(let i=0;i<n;i++){
+    const x=S[off+i].CIB*w;
+    const y=h-clamp01(S[off+i].sigma/0.12)*(h-12)-6;
+    i?mctx.lineTo(x,y):mctx.moveTo(x,y);
+  }
+  mctx.stroke();
+  mctx.strokeStyle='#4db8ff'; mctx.setLineDash([3,3]);
+  mctx.beginPath(); mctx.moveTo(0,h-6-clamp01(SIG_CRIT/0.12)*(h-12));
+  mctx.lineTo(w,h-6-clamp01(SIG_CRIT/0.12)*(h-12)); mctx.stroke();
+  mctx.setLineDash([]);
+  mctx.fillStyle='#6b8199'; mctx.font='9px monospace';
+  mctx.fillText('σ vs CI_B · dashed = σ_crit 5.3%',6,11);
+}
+function drawMultifrac(w,h){
+  const s=sim;
+  mctx.strokeStyle='#a77bff'; mctx.lineWidth=1.4; mctx.beginPath();
+  for(let i=0;i<=60;i++){
+    const q=-3+i/60*6;
+    let D;
+    if(Math.abs(q-1)<0.05) D=1.0;
+    else D=(Math.log(1+Math.abs(q)*0.5*s.cd)/(1-q))*(0.6+0.5*s.psi);
+    const x=i/60*w, y=h/2-clamp(D,-1,2)*(h/2-8);
+    i?mctx.lineTo(x,y):mctx.moveTo(x,y);
+  }
+  mctx.stroke();
+  mctx.fillStyle='#6b8199'; mctx.font='9px monospace';
+  mctx.fillText('D_q · q ∈ [−3,3]',6,11);
+  mctx.fillStyle='#a77bff'; mctx.fillText('Δ = '+(0.4+1.2*(1-s.psi)).toFixed(2),w-52,11);
+}
+function drawCrit(w,h){
+  const S=sim.series; if(S.length<3)return;
+  const n=Math.min(S.length,400),off=S.length-n;
+  let mx=1e-6; for(let i=0;i<n;i++)mx=Math.max(mx,S[off+i].kurt);
+  mctx.strokeStyle='#4db8ff'; mctx.lineWidth=1.3; mctx.beginPath();
+  for(let i=0;i<n;i++){
+    const x=i/(n-1)*w, y=h-6-(S[off+i].kurt/mx)*(h-14);
+    i?mctx.lineTo(x,y):mctx.moveTo(x,y);
+  }
+  mctx.stroke();
+  mctx.fillStyle='#6b8199'; mctx.font='9px monospace';
+  mctx.fillText('Var(kurt) ↑ as Re λ_max → 0⁻',6,11);
+  mctx.fillStyle='#4db8ff'; mctx.fillText('ρ₁ = '+sim.rho1.toFixed(3),w-64,11);
+}
+
+/* ---------------------------------------------------------------------
+   EXPORT
+--------------------------------------------------------------------- */
+function snapshot(){
+  const s=sim;
+  return {
+    meta:{
+      program:'Coherence Dynamics Program · CCT Dashboard',
+      version:'1.0', generated:new Date().toISOString(),
+      status:'conceptual / educational — not clinical, not diagnostic',
+      tier:'T2 (model) with T1-style falsifiability scaffolding'
+    },
+    t:+s.t.toFixed(3),
+    PSV:{P:+s.P.toFixed(5),B:+s.B.toFixed(5),T:+s.T.toFixed(5),
+         rho:+s.rho.toFixed(5),sigma:+s.sigma.toFixed(5),
+         CI_B:+s.CIB.toFixed(5),lambda:+s.lam.toFixed(5)},
+    derived:{
+      PSI:+s.psi.toFixed(5), severity:+s.sev.toFixed(5),
+      CI_C:+s.CIC.toFixed(5), sigma_topo:+s.stopo.toFixed(5),
+      spectral_norm_computed:+s.smax.toFixed(6),
+      lyapunov:+s.lyap.toFixed(5), kurtosis:+s.kurt.toFixed(4),
+      variance:+s.var.toFixed(6), lag1_autocorr:+s.rho1.toFixed(4),
+      bifurcation:s.bifur, branch_desync:+s.branch.toFixed(4),
+      voice_fragments:s.voices, kramers_rate:+s.kram.toExponential(4),
+      first_exit_risk:+s.rr.toFixed(5), crc_stage:s.crc,
+      alert:s.alert||null
+    },
+    frontier:{
+      phi_star:+s.phi.toFixed(5), synergy:+s.syn.toFixed(5),
+      renyi_entropy:+s.renyi.toFixed(5), causal_density:+s.cd.toFixed(5),
+      effective_dim:+s.deff.toFixed(5), entropy_production:+s.ep.toFixed(5),
+      transfer_entropy:+s.te.toFixed(5), recovery_basin:+s.rc.toFixed(5),
+      potential:+s.V.toFixed(5), divergence:+s.div.toFixed(5),
+      torsion:+s.torsion.toFixed(5)
+    },
+    controls:{ load:+s.load.toFixed(3), treatment:+s.rx.toFixed(3) },
+    features:FEATURES.map(f=>({id:f.id, group:GROUPS[f.g], name:f.n,
+      enabled:on.has(f.id), formula:f.f})),
+    thresholds:{ sigma_crit:SIG_CRIT, rho_max:RHO_MAX,
+      lambda_floor:LAM_FLOOR, CI_B_floor:CIB_FLOOR, kurtosis_warn:8 },
+    notes:[
+      'rho(W) = spectralNorm(I + dt*J) * g(sev), where g(sev)=1/(1-0.38*sev)',
+      'models the collapse of inhibitory (GABAergic) regularisation.',
+      'The computed operator norm is reported separately as spectral_norm_computed.',
+      'PSI is a repaired, monotone health index; the original (sigma_crit-sigma)/sigma_crit * H_sys',
+      'form is not monotone and is therefore not used verbatim.'
+    ],
+    series_sample:s.series.slice(-600)
+  };
+}
+
+function dl(name,text,mime){
+  const b=new Blob([text],{type:mime||'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1200);
+}
+
+$('expJson').onclick=()=>dl('cct_metrics.json',JSON.stringify(snapshot(),null,2),'application/json');
+
+$('expCsv').onclick=()=>{
+  const S=sim.series;
+  const cols=['t','P','B','T','rho','sigma','CIB','CIC','lam','psi','kurt','stopo'];
+  let out=cols.join(',')+'\n';
+  S.forEach(r=>{ out+=cols.map(c=>r[c]??'').join(',')+'\n'; });
+  dl('cct_series.csv',out,'text/csv');
+};
+
+$('expMd').onclick=()=>{
+  const s=snapshot(); const d=s.derived, f=s.frontier, p=s.PSV;
+  let md=`# CCT Coherence Collapse — Dashboard Report\n\n`;
+  md+=`**Generated:** ${s.meta.generated}  \n**Status:** ${s.meta.status}  \n**Tier:** ${s.meta.tier}\n\n`;
+  md+=`> Conceptual educational model. No value here is a diagnostic, prognostic or therapeutic algorithm.\n\n`;
+  md+=`## 1. Psychotic State Vector\n\n`;
+  md+=`| Dimension | Symbol | Value | Healthy range | In range |\n|---|---|---|---|---|\n`;
+  const rows=[
+    ['Precision','P',p.P,'[-1,1]',Math.abs(p.P)<=1],
+    ['Boundary integrity','B',p.B,'[-1,1]',p.B>=-1],
+    ['Temporal coherence','T',p.T,'[-1,1]',p.T>=-1],
+    ['Spectral radius','ρ',p.rho,'[0,0.95]',p.rho<=RHO_MAX],
+    ['Noise tolerance','σ',p.sigma,'[0,0.053]',p.sigma<=SIG_CRIT],
+    ['Boundary coherence','CI_B',p.CI_B,'[0.7,1]',p.CI_B>=0.7],
+    ['Regularisation floor','λ',p.lambda,'[0.01,0.1]',p.lambda>=0.01]
+  ];
+  rows.forEach(([n,sym,v,rg,ok])=>{ md+=`| ${n} | ${sym} | ${v} | ${rg} | ${ok?'✓':'✗'} |\n`; });
+  md+=`\n## 2. Derived metrics\n\n| Metric | Value |\n|---|---|\n`;
+  md+=`| Psychotic State Index (PSI) | ${d.PSI} |\n`;
+  md+=`| Regime | ${d.PSI>0.7?'STABLE':d.PSI>0.4?'VULNERABLE':d.PSI>0.3?'CRITICAL':'COLLAPSE'} |\n`;
+  md+=`| Continuum coherence CI_C | ${d.CI_C} |\n`;
+  md+=`| Conservation residual σ_topo | ${d.sigma_topo} |\n`;
+  md+=`| ‖I+Δt·J‖₂ (computed) | ${d.spectral_norm_computed} |\n`;
+  md+=`| Lyapunov exponent λ_L | ${d.lyapunov} |\n`;
+  md+=`| Rolling kurtosis | ${d.kurtosis} |\n`;
+  md+=`| Lag-1 autocorrelation | ${d.lag1_autocorr} |\n`;
+  md+=`| Bifurcation class | ${d.bifurcation} |\n`;
+  md+=`| Branch desynchronisation | ${d.branch_desync} |\n`;
+  md+=`| Voice fragments | ${d.voice_fragments} |\n`;
+  md+=`| Kramers escape rate | ${d.kramers_rate} |\n`;
+  md+=`| First-exit relapse risk | ${d.first_exit_risk} |\n`;
+  md+=`| CRC stage reached | ${d.crc_stage}/7 |\n`;
+  md+=`| Active alert | ${d.alert||'none'} |\n`;
+  md+=`\n## 3. Frontier analytics\n\n| Quantity | Value |\n|---|---|\n`;
+  md+=`| Integrated information Φ* | ${f.phi_star} |\n`;
+  md+=`| Synergy I(P;B;T) | ${f.synergy} |\n`;
+  md+=`| Rényi precision entropy | ${f.renyi_entropy} |\n`;
+  md+=`| Causal density CD | ${f.causal_density} |\n`;
+  md+=`| Effective dimension d_eff | ${f.effective_dim} |\n`;
+  md+=`| Entropy production | ${f.entropy_production} |\n`;
+  md+=`| Transfer entropy | ${f.transfer_entropy} |\n`;
+  md+=`| Recovery basin RC | ${f.recovery_basin} |\n`;
+  md+=`| Potential V | ${f.potential} |\n`;
+  md+=`| Divergence ∇·Ḋ | ${f.divergence} |\n`;
+  md+=`| Torsion τ | ${f.torsion} |\n`;
+  md+=`\n## 4. Feature register — 48 implemented functions\n\n`;
+  GROUPS.forEach((g,gi)=>{
+    md+=`### ${gi}. ${g}\n\n| # | Feature | Formula | Enabled |\n|---|---|---|---|\n`;
+    FEATURES.filter(x=>x.g===gi).forEach(x=>{
+      md+=`| F${String(x.id).padStart(2,'0')} | ${x.n} | \`${x.f}\` | ${x.enabled?'✓':'—'} |\n`;
+    });
+    md+=`\n`;
+  });
+  md+=`## 5. Governance and thresholds\n\n`;
+  md+=`| Threshold | Value | Source |\n|---|---|---|\n`;
+  md+=`| σ_crit | ${SIG_CRIT} | CCT phase-transition set |\n`;
+  md+=`| ρ_max | ${RHO_MAX} | stability boundary |\n`;
+  md+=`| λ_floor | ${LAM_FLOOR} | voice-fragmentation floor |\n`;
+  md+=`| CI_B floor | ${CIB_FLOOR} | minimum viable boundary |\n`;
+  md+=`| kurtosis warning | 8 | heavy-tail onset |\n`;
+  md+=`\n## 6. Modelling notes and honest caveats\n\n`;
+  s.notes.forEach(n=>md+=`- ${n}\n`);
+  md+=`\n---\n\n### CDP-3.0 tier compliance\n\n`;
+  md+=`All quantities above are **T2 (model)** unless explicitly marked T1. No T3 nouns `;
+  md+=`("ledger", "Pazuzu", "ZARG", "tulpoid", "Gate", "GhostMesh") appear in this report. `;
+  md+=`The primary endpoint of CDP-3.0 remains the Faraday-isolated twin mutual-information test, `;
+  md+=`which this dashboard does not attempt to substitute for.\n`;
+  dl('cct_report.md',md,'text/markdown');
+};
+
+/* ---------------------------------------------------------------------
+   MAIN LOOP
+--------------------------------------------------------------------- */
+let last=performance.now(), acc=0;
+function loop(now){
+  requestAnimationFrame(loop);
+  const dtReal=Math.min((now-last)/1000,0.1); last=now;
+  if(running){
+    acc+=dtReal;
+    let guard=0;
+    while(acc>dt && guard<10){ step(); acc-=dt; guard++; }
+  }
+  frame++;
+  updateScene();
+  if(frame%6===0) refreshSide();
+  renderer.render(scene,camera);
+}
+
+/* boot */
+resetSim();
+syncVis();
+resize();
+fitMini();
+refreshSide();
+requestAnimationFrame(loop);
+setTimeout(()=>{const b=$('boot'); b.style.opacity=0; setTimeout(()=>b.remove(),600);},350);
+</script>
+</body>
+</html>
